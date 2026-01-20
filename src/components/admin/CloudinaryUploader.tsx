@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { useState, ChangeEvent } from 'react';
+import { X, Loader2, Image as ImageIcon } from 'lucide-react';
 
-const CloudinaryUploader = ({ currentImage, onImageUploaded }) => {
+interface CloudinaryUploaderProps {
+  currentImage?: string | null;
+  onImageUploaded: (imageUrl: string | null) => void;
+}
+
+const CloudinaryUploader = ({ currentImage, onImageUploaded }: CloudinaryUploaderProps) => {
   const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState(currentImage || null);
-  const [error, setError] = useState(null);
+  const [preview, setPreview] = useState<string | null>(currentImage || null);
+  const [error, setError] = useState<string | null>(null);
 
   const CLOUD_NAME = 'dqdfpqwl4';
-  const UPLOAD_PRESET = 'products_preset'; // Deberás crear este preset en Cloudinary
+  const UPLOAD_PRESET = 'products_preset';
 
-  const handleFileSelect = async (e) => {
-    const file = e.target.files[0];
+  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
       setError('Por favor selecciona una imagen válida');
       return;
     }
 
-    // Validar tamaño (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('La imagen no puede superar los 5MB');
       return;
@@ -33,7 +36,7 @@ const CloudinaryUploader = ({ currentImage, onImageUploaded }) => {
       formData.append('file', file);
       formData.append('upload_preset', UPLOAD_PRESET);
       formData.append('cloud_name', CLOUD_NAME);
-      formData.append('folder', 'products'); // Organiza las imágenes en una carpeta
+      formData.append('folder', 'products');
 
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
@@ -48,10 +51,11 @@ const CloudinaryUploader = ({ currentImage, onImageUploaded }) => {
       }
 
       const data = await response.json();
-      
-      // URL optimizada de Cloudinary
-      const optimizedUrl = data.secure_url.replace('/upload/', '/upload/w_800,h_800,c_fill,q_auto,f_auto/');
-      
+      const optimizedUrl = data.secure_url.replace(
+        '/upload/',
+        '/upload/w_800,h_800,c_fill,q_auto,f_auto/'
+      );
+
       setPreview(optimizedUrl);
       onImageUploaded(optimizedUrl);
     } catch (err) {
@@ -72,15 +76,11 @@ const CloudinaryUploader = ({ currentImage, onImageUploaded }) => {
       <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">
         Imagen del Producto
       </label>
-      
+
       <div className="relative">
         {preview ? (
           <div className="relative bg-slate-950 border border-slate-800 rounded-xl overflow-hidden group">
-            <img 
-              src={preview} 
-              alt="Preview" 
-              className="w-full h-48 object-cover"
-            />
+            <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <button
                 type="button"

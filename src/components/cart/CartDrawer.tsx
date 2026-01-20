@@ -1,71 +1,65 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Minus, Plus, Trash2, ShoppingBag, Loader2, CheckCircle, Tag } from 'lucide-react';
-import { useCart } from './CartContext';
+import { useCartStore } from '../../store/cartStore';
+import { ordersApi } from '../../api/endpoints';
+import { notifications } from '@mantine/notifications';
+import { useQueryClient } from '@tanstack/react-query';
 
-const CartSidebar = ({ token, onOrderSuccess }) => {
-  const { cart, isOpen, setIsOpen, updateQuantity, removeFromCart, clearCart, getTotal, getTotalItems } = useCart();
+interface CartDrawerProps {
+  onOrderSuccess?: (orderData: any) => void;
+}
+
+const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
+  const { cart, isOpen, setIsOpen, updateQuantity, removeFromCart, clearCart, getTotal, getTotalItems } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
-
-  const getApiUrl = () => {
-    try {
-      const viteEnv = typeof import.meta !== 'undefined' && import.meta.env 
-        ? import.meta.env.VITE_API_BASE 
-        : null;
-      
-      return viteEnv || 'http://localhost:3000';
-    } catch (e) {
-      return 'http://localhost:3000';
-    }
-  };
-
-  const API_URL = getApiUrl();
+  const queryClient = useQueryClient();
 
   const handleCheckout = async () => {
-    if (!token) {
-      alert('Debes iniciar sesión para realizar una compra');
-      return;
-    }
-
     if (cart.length === 0) {
-      alert('El carrito está vacío');
+      notifications.show({
+        title: 'Carrito vacío',
+        message: 'Agrega productos antes de finalizar la compra',
+        color: 'orange',
+      });
       return;
     }
 
     setLoading(true);
     try {
-      const items = cart.map(item => ({
+      const items = cart.map((item) => ({
         productId: item.id,
-        quantity: item.quantity
+        quantity: item.quantity,
       }));
 
-      const res = await fetch(`${API_URL}/orders/checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ items }),
+      const data = await ordersApi.checkout({ items });
+
+      setOrderComplete(true);
+      clearCart();
+      
+      // Invalidar productos para actualizar stock
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+
+      if (onOrderSuccess) {
+        onOrderSuccess(data);
+      }
+
+      notifications.show({
+        title: '¡Orden completada!',
+        message: 'Tu compra se procesó exitosamente',
+        color: 'green',
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setOrderComplete(true);
-        clearCart();
-        if (onOrderSuccess) onOrderSuccess(data);
-        
-        window.dispatchEvent(new Event('orderCompleted'));
-        
-        setTimeout(() => {
-          setOrderComplete(false);
-          setIsOpen(false);
-        }, 2000);
-      } else {
-        alert(data.message || 'Error al procesar la orden');
-      }
-    } catch (error) {
-      alert('Error al conectar con el servidor');
+      setTimeout(() => {
+        setOrderComplete(false);
+        setIsOpen(false);
+      }, 2000);
+    } catch (error: any) {
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Error al procesar la orden',
+        color: 'red',
+      });
     } finally {
       setLoading(false);
     }
@@ -75,13 +69,12 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
 
   return (
     <>
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-in fade-in"
         onClick={() => setIsOpen(false)}
       />
 
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-slate-900 border-l border-slate-800 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
-        
         <div className="flex items-center justify-between p-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-500/20 p-2 rounded-xl">
@@ -94,7 +87,7 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             className="p-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-white"
           >
@@ -122,35 +115,33 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
               <p className="text-slate-600 text-sm mt-1">Agrega productos para empezar</p>
             </div>
           ) : (
-            cart.map(item => (
-              <div key={item.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4 hover:border-slate-700 transition-all">
+            cart.map((item) => (
+              <div
+                key={item.id}
+                className="bg-slate-950 border border-slate-800 rounded-2xl p-4 hover:border-slate-700 transition-all"
+              >
                 <div className="flex gap-4">
                   <div className="w-20 h-20 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 flex-shrink-0">
                     {item.imageUrl ? (
-                      <img 
-                        src={item.imageUrl} 
+                      <img
+                        src={item.imageUrl}
                         alt={item.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextElementSibling.style.display = 'flex';
+                          e.currentTarget.style.display = 'none';
                         }}
                       />
-                    ) : null}
-                    <div 
-                      className={`w-full h-full flex items-center justify-center ${item.imageUrl ? 'hidden' : 'flex'}`}
-                      style={{ display: item.imageUrl ? 'none' : 'flex' }}
-                    >
+                    ) : (
                       <Tag size={24} className="text-slate-700" />
-                    </div>
+                    )}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-white text-sm truncate">{item.name}</h3>
                     <p className="text-indigo-400 font-black text-lg mt-1">
                       ${Number(item.price).toFixed(2)}
                     </p>
-                    
+
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-2">
                         <button
@@ -170,7 +161,7 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
                           <Plus size={14} className="text-white" />
                         </button>
                       </div>
-                      
+
                       <button
                         onClick={() => removeFromCart(item.id)}
                         className="p-1.5 hover:bg-red-500/10 text-red-400 rounded-lg transition-colors"
@@ -191,7 +182,7 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
               <span className="text-slate-400 font-bold">Subtotal</span>
               <span className="text-2xl font-black text-white">${getTotal().toFixed(2)}</span>
             </div>
-            
+
             <button
               onClick={handleCheckout}
               disabled={loading}
@@ -206,7 +197,7 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
                 'FINALIZAR COMPRA'
               )}
             </button>
-            
+
             <button
               onClick={clearCart}
               className="w-full text-slate-400 hover:text-white text-sm font-bold transition-colors"
@@ -220,4 +211,4 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
   );
 };
 
-export default CartSidebar;
+export default CartDrawer;
