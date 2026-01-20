@@ -11,7 +11,19 @@ const AdminDashboard = ({ token, setGlobalResponse }) => {
     name: '', description: '', price: 0, stock: 0 
   });
 
-  const API_URL = 'http://localhost:3000';
+  const getApiUrl = () => {
+    try {
+      const viteEnv = typeof import.meta !== 'undefined' && import.meta.env 
+        ? import.meta.env.VITE_API_BASE 
+        : null;
+      
+      return viteEnv || 'http://localhost:3000';
+    } catch (e) {
+      return 'http://localhost:3000';
+    }
+  };
+
+  const API_URL = getApiUrl();
 
   useEffect(() => {
     fetchProducts();

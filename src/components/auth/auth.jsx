@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, UserPlus, Loader2 } from 'lucide-react';
+import { LogIn, UserPlus, Loader2, ShieldCheck, Mail, Lock } from 'lucide-react';
 
 const Auth = ({ onAuthSuccess }) => {
   const [view, setView] = useState('login');
@@ -7,10 +7,28 @@ const Auth = ({ onAuthSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
 
-  const API_URL = 'http://localhost:3000';
+  /**
+   * Solución al error de compilación:
+   * Accedemos a las variables de entorno de Vite de forma segura para el entorno 'es2015'.
+   */
+  const getApiUrl = () => {
+    try {
+      // Intentamos acceder vía import.meta.env (estándar de Vite)
+      // Usamos un chequeo de tipo para evitar errores en entornos antiguos
+      const viteEnv = typeof import.meta !== 'undefined' && import.meta.env 
+        ? import.meta.env.VITE_API_BASE 
+        : null;
+      
+      return viteEnv || 'http://localhost:3000';
+    } catch (e) {
+      return 'http://localhost:3000';
+    }
+  };
+
+  const API_URL = getApiUrl();
 
   const handleAuth = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setLoading(true);
     setResponse(null);
     
@@ -30,95 +48,109 @@ const Auth = ({ onAuthSuccess }) => {
       setResponse({ status: res.status, data });
 
       if (res.ok && data.access_token) {
+        localStorage.setItem('token', data.access_token);
         onAuthSuccess(data.access_token);
       }
     } catch (error) {
-      setResponse({ status: 'ERROR', data: { message: 'Servidor desconectado' } });
+      setResponse({ 
+        status: 500, 
+        data: { message: "Error de conexión. Verifica que el backend esté corriendo." } 
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in-95">
-      <div className="flex bg-slate-950 p-1.5 rounded-2xl mb-8 border border-slate-800/50 shadow-inner">
+    <div className="max-w-md mx-auto p-8 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl">
+      <div className="flex flex-col items-center mb-8">
+        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/30">
+          {view === 'login' ? <LogIn className="text-white w-8 h-8" /> : <UserPlus className="text-white w-8 h-8" />}
+        </div>
+        <h2 className="text-2xl font-black text-white tracking-tight">
+          {view === 'login' ? 'BIENVENIDO' : 'ÚNETE AHORA'}
+        </h2>
+        <p className="text-slate-400 text-sm mt-1">
+          {view === 'login' ? 'Ingresa tus credenciales para continuar' : 'Completa los datos para registrarte'}
+        </p>
+      </div>
+
+      <div className="flex p-1 bg-slate-950 rounded-xl mb-6 border border-slate-800">
         <button 
-          onClick={() => setView('login')} 
-          className={`flex-1 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
-            view === 'login' 
-              ? 'bg-indigo-600 text-white shadow-lg' 
-              : 'text-slate-500 hover:text-white'
-          }`}
+          onClick={() => setView('login')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${view === 'login' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
         >
-          <LogIn size={14} /> LOGIN
+          LOGIN
         </button>
         <button 
-          onClick={() => setView('register')} 
-          className={`flex-1 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
-            view === 'register' 
-              ? 'bg-indigo-600 text-white shadow-lg' 
-              : 'text-slate-500 hover:text-white'
-          }`}
+          onClick={() => setView('register')}
+          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${view === 'register' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
         >
-          <UserPlus size={14} /> REGISTRO
+          REGISTRO
         </button>
       </div>
 
-      <div className="space-y-5">
-        <input 
-          name="email" 
-          type="email" 
-          placeholder="Correo electrónico" 
-          value={formData.email} 
-          onChange={(e) => setFormData({...formData, email: e.target.value})} 
-          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-white" 
-          required 
-        />
-        
-        <input 
-          name="password" 
-          type="password" 
-          placeholder="Contraseña" 
-          value={formData.password} 
-          onChange={(e) => setFormData({...formData, password: e.target.value})} 
-          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-white" 
-          required 
-        />
-        
+      <div className="space-y-4">
+        <div className="relative">
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+          <input 
+            type="email"
+            placeholder="Email corporativo"
+            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+          />
+        </div>
+
+        <div className="relative">
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+          <input 
+            type="password"
+            placeholder="Contraseña segura"
+            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+            value={formData.password}
+            onChange={(e) => setFormData({...formData, password: e.target.value})}
+          />
+        </div>
+
         {view === 'register' && (
-          <select 
-            value={formData.role} 
-            onChange={(e) => setFormData({...formData, role: e.target.value})} 
-            className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-white"
-          >
-            <option value="USER">ROL: USUARIO CLIENTE</option>
-            <option value="ADMIN">ROL: ADMINISTRADOR</option>
-          </select>
+          <div className="relative">
+            <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+            <select 
+              value={formData.role}
+              onChange={(e) => setFormData({...formData, role: e.target.value})}
+              className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              <option value="USER">ROL: USUARIO CLIENTE</option>
+              <option value="ADMIN">ROL: ADMINISTRADOR</option>
+            </select>
+          </div>
         )}
 
         <button 
           onClick={handleAuth}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-black text-white transition-all flex justify-center items-center shadow-lg shadow-indigo-500/20 active:scale-95"
+          disabled={loading}
+          className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 py-4 rounded-2xl font-black text-white transition-all flex justify-center items-center shadow-lg shadow-indigo-500/20 active:scale-95 mt-2"
         >
           {loading ? <Loader2 className="animate-spin" /> : (view === 'login' ? 'ACCEDER AL SISTEMA' : 'CREAR MI PERFIL')}
         </button>
       </div>
 
       {response && (
-        <div className="mt-6 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden">
-          <div className="px-4 py-2 border-b border-slate-800 flex justify-between items-center">
-            <span className="text-[10px] font-black text-slate-500">RESPUESTA</span>
-            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
-              response.status >= 400 
-                ? 'bg-red-500/20 text-red-400' 
-                : 'bg-emerald-500/20 text-emerald-400'
+        <div className="mt-6 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+          <div className="px-4 py-2 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Estado del Servidor</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              response.status >= 400 ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
             }`}>
-              {response.status}
+              HTTP {response.status}
             </span>
           </div>
-          <pre className="p-4 text-[10px] text-indigo-300 overflow-auto max-h-32">
-            {JSON.stringify(response.data, null, 2)}
-          </pre>
+          <div className="p-4">
+            <pre className="text-[11px] font-mono text-indigo-300 whitespace-pre-wrap leading-relaxed">
+              {JSON.stringify(response.data, null, 2)}
+            </pre>
+          </div>
         </div>
       )}
     </div>

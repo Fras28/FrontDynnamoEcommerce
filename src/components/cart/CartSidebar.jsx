@@ -7,7 +7,19 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
 
-  const API_URL = 'http://localhost:3000';
+  const getApiUrl = () => {
+    try {
+      const viteEnv = typeof import.meta !== 'undefined' && import.meta.env 
+        ? import.meta.env.VITE_API_BASE 
+        : null;
+      
+      return viteEnv || 'http://localhost:3000';
+    } catch (e) {
+      return 'http://localhost:3000';
+    }
+  };
+
+  const API_URL = getApiUrl();
 
   const handleCheckout = async () => {
     if (!token) {
