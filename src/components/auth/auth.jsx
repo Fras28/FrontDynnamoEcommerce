@@ -101,7 +101,7 @@ const Auth = ({ onAuthSuccess }) => {
               type="email"
               required
               placeholder="correo@ejemplo.com"
-              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 pl-12 pr-4 py-4 rounded-2xl outline-none transition-all text-black font-medium placeholder:text-slate-700"
+              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 pl-12 pr-4 py-4 rounded-2xl outline-none transition-all text-black placeholder:text-slate-500 font-medium"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
@@ -116,7 +116,7 @@ const Auth = ({ onAuthSuccess }) => {
               type={showPassword ? "text" : "password"}
               required
               placeholder="••••••••"
-              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 pl-12 pr-12 py-4 rounded-2xl outline-none transition-all text-black font-medium placeholder:text-slate-700"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 pl-12 pr-4 py-4 rounded-2xl outline-none transition-all text-black placeholder:text-slate-500 font-medium"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
