@@ -96,7 +96,7 @@ const Auth = ({ onAuthSuccess }) => {
           <input 
             type="email"
             placeholder="Email corporativo"
-            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
             value={formData.email}
             onChange={(e) => setFormData({...formData, email: e.target.value})}
           />
@@ -107,7 +107,7 @@ const Auth = ({ onAuthSuccess }) => {
           <input 
             type="password"
             placeholder="Contraseña segura"
-            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
             value={formData.password}
             onChange={(e) => setFormData({...formData, password: e.target.value})}
           />
@@ -119,7 +119,7 @@ const Auth = ({ onAuthSuccess }) => {
             <select 
               value={formData.role}
               onChange={(e) => setFormData({...formData, role: e.target.value})}
-              className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
               <option value="USER">ROL: USUARIO CLIENTE</option>
               <option value="ADMIN">ROL: ADMINISTRADOR</option>
