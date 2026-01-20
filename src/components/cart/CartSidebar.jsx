@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Minus, Plus, Trash2, ShoppingBag, Loader2, CheckCircle } from 'lucide-react';
+import { X, Minus, Plus, Trash2, ShoppingBag, Loader2, CheckCircle, Tag } from 'lucide-react';
 import { useCart } from './CartContext';
 
 const CartSidebar = ({ token, onOrderSuccess }) => {
@@ -55,10 +55,8 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
         clearCart();
         if (onOrderSuccess) onOrderSuccess(data);
         
-        // Disparar evento para que UserView refresque los productos
         window.dispatchEvent(new Event('orderCompleted'));
         
-        // Cerrar después de 2 segundos
         setTimeout(() => {
           setOrderComplete(false);
           setIsOpen(false);
@@ -77,16 +75,13 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
 
   return (
     <>
-      {/* Overlay */}
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-in fade-in"
         onClick={() => setIsOpen(false)}
       />
 
-      {/* Sidebar */}
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-slate-900 border-l border-slate-800 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
         
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-500/20 p-2 rounded-xl">
@@ -107,7 +102,6 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
           </button>
         </div>
 
-        {/* Order Complete Animation */}
         {orderComplete && (
           <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-10">
             <div className="bg-emerald-500/20 p-6 rounded-full mb-4 animate-in zoom-in">
@@ -118,7 +112,6 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
           </div>
         )}
 
-        {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
@@ -132,8 +125,24 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
             cart.map(item => (
               <div key={item.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4 hover:border-slate-700 transition-all">
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-slate-900 rounded-xl flex items-center justify-center border border-slate-800">
-                    <ShoppingBag size={24} className="text-slate-700" />
+                  <div className="w-20 h-20 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 flex-shrink-0">
+                    {item.imageUrl ? (
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className={`w-full h-full flex items-center justify-center ${item.imageUrl ? 'hidden' : 'flex'}`}
+                      style={{ display: item.imageUrl ? 'none' : 'flex' }}
+                    >
+                      <Tag size={24} className="text-slate-700" />
+                    </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -176,7 +185,6 @@ const CartSidebar = ({ token, onOrderSuccess }) => {
           )}
         </div>
 
-        {/* Footer */}
         {cart.length > 0 && (
           <div className="border-t border-slate-800 p-6 space-y-4 bg-slate-900/80 backdrop-blur">
             <div className="flex justify-between items-center">

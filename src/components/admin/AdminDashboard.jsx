@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
   Loader2, PackagePlus, Tag, BarChart3, Edit3, X, Save, Trash2
 } from 'lucide-react';
+import CloudinaryUploader from './CloudinaryUploader';
 
 const AdminDashboard = ({ token, setGlobalResponse }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [productForm, setProductForm] = useState({ 
-    name: '', description: '', price: 0, stock: 0 
+    name: '', description: '', price: 0, stock: 0, imageUrl: '' 
   });
 
   const getApiUrl = () => {
@@ -43,8 +44,12 @@ const AdminDashboard = ({ token, setGlobalResponse }) => {
     setProductForm({ ...productForm, [e.target.name]: e.target.value });
   };
 
+  const handleImageUploaded = (imageUrl) => {
+    setProductForm({ ...productForm, imageUrl: imageUrl || '' });
+  };
+
   const resetForm = () => {
-    setProductForm({ name: '', description: '', price: '', stock: '' });
+    setProductForm({ name: '', description: '', price: '', stock: '', imageUrl: '' });
     setEditingId(null);
   };
 
@@ -68,8 +73,9 @@ const AdminDashboard = ({ token, setGlobalResponse }) => {
         body: JSON.stringify({
           name: productForm.name,
           description: productForm.description,
-          price: parseFloat(productForm.price),  // ← Convertir a número
-          stock: parseInt(productForm.stock, 10) // ← Convertir a entero
+          price: parseFloat(productForm.price),
+          stock: parseInt(productForm.stock, 10),
+          imageUrl: productForm.imageUrl || null
         }),
       });
   
@@ -93,7 +99,8 @@ const AdminDashboard = ({ token, setGlobalResponse }) => {
       name: product.name,
       description: product.description || '',
       price: product.price,
-      stock: product.stock
+      stock: product.stock,
+      imageUrl: product.imageUrl || ''
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -139,6 +146,12 @@ const AdminDashboard = ({ token, setGlobalResponse }) => {
           </div>
 
           <div className="space-y-4">
+            {/* Uploader de Imagen */}
+            <CloudinaryUploader 
+              currentImage={productForm.imageUrl}
+              onImageUploaded={handleImageUploaded}
+            />
+
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">Nombre</label>
               <input 
@@ -219,17 +232,27 @@ const AdminDashboard = ({ token, setGlobalResponse }) => {
           
           {products.map(p => (
             <div key={p.id} className="bg-slate-900 border border-slate-800 p-6 rounded-[2rem] hover:border-slate-700 transition-all group shadow-lg">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-4">
-                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-indigo-400 group-hover:scale-110 transition-transform">
-                    <Tag size={24} />
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="bg-slate-950 w-20 h-20 rounded-2xl border border-slate-800 overflow-hidden flex-shrink-0">
+                    {p.imageUrl ? (
+                      <img 
+                        src={p.imageUrl} 
+                        alt={p.name} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Tag size={24} className="text-slate-700" />
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <h4 className="font-bold text-white text-lg group-hover:text-indigo-400 transition-colors">{p.name}</h4>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-white text-lg group-hover:text-indigo-400 transition-colors truncate">{p.name}</h4>
                     <p className="text-[10px] text-slate-500 font-black">ID: #{p.id}</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-shrink-0">
                   <button onClick={() => handleEditClick(p)} className="p-2.5 hover:bg-indigo-500/10 text-indigo-400 rounded-xl transition-all" title="Editar">
                     <Edit3 size={18} />
                   </button>

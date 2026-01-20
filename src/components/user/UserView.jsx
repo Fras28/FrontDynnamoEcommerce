@@ -37,7 +37,6 @@ const UserView = () => {
   useEffect(() => {
     fetchProducts();
     
-    // Escuchar evento de orden completada para refrescar productos
     const handleOrderComplete = () => {
       fetchProducts();
     };
@@ -93,11 +92,27 @@ const UserView = () => {
               key={product.id} 
               className="group bg-slate-900 border border-slate-800 rounded-[2.5rem] p-2 hover:border-indigo-500/50 transition-all hover:shadow-2xl hover:shadow-indigo-500/10"
             >
-              <div className="relative aspect-square bg-slate-950 rounded-[2rem] overflow-hidden mb-4 flex items-center justify-center border border-slate-800/50">
-                <Tag 
-                  size={60} 
-                  className="text-slate-800 group-hover:text-indigo-500/20 transition-colors duration-500" 
-                />
+              <div className="relative aspect-square bg-slate-950 rounded-[2rem] overflow-hidden mb-4 border border-slate-800/50">
+                {product.imageUrl ? (
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextElementSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className={`absolute inset-0 flex items-center justify-center ${product.imageUrl ? 'hidden' : 'flex'}`}
+                  style={{ display: product.imageUrl ? 'none' : 'flex' }}
+                >
+                  <Tag 
+                    size={60} 
+                    className="text-slate-800 group-hover:text-indigo-500/20 transition-colors duration-500" 
+                  />
+                </div>
                 <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700 text-[10px] font-bold text-white shadow-xl">
                   {product.stock > 0 ? `${product.stock} DISPONIBLES` : 'SIN STOCK'}
                 </div>
