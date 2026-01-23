@@ -24,9 +24,14 @@ api.interceptors.request.use(
   }
 );
 
-// Response Interceptor - Manejo de errores global
+// Response Interceptor - Extraer "data" del wrapper y manejo de errores
 api.interceptors.response.use(
   (response) => {
+    // Si la respuesta tiene el wrapper {success, timestamp, path, data}
+    // extraer automáticamente el "data"
+    if (response.data?.success !== undefined && response.data?.data !== undefined) {
+      return { ...response, data: response.data.data };
+    }
     return response;
   },
   (error) => {
