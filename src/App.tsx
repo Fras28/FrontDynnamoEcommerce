@@ -7,12 +7,13 @@ import { ShoppingBag, Trash2, Terminal, ShoppingCart as CartIcon } from 'lucide-
 
 
 import AuthForm from './components/Auth/AuthForm';
-import {  Role } from './types';
+import { Role } from './types';
 import { useAuthStore } from './store/authStore';
 import { useCartStore } from './store/cartStore';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UserView from './components/user/UserView';
 import CartDrawer from './components/cart/CartDrawer';
+import PaymentSuccess from './components/cart/PaymentSuccess';
 
 // Response type para el footer de logs
 interface ApiResponse {
@@ -73,9 +74,8 @@ const Layout = ({ children, response }: LayoutProps) => {
                 <div className="text-right">
                   <p className="text-xs font-bold text-white mb-0.5">{user.email}</p>
                   <p
-                    className={`text-[9px] font-black tracking-widest ${
-                      user.role === Role.ADMIN ? 'text-amber-400' : 'text-emerald-400'
-                    }`}
+                    className={`text-[9px] font-black tracking-widest ${user.role === Role.ADMIN ? 'text-amber-400' : 'text-emerald-400'
+                      }`}
                   >
                     {user.role}
                   </p>
@@ -102,11 +102,10 @@ const Layout = ({ children, response }: LayoutProps) => {
                 <Terminal size={14} /> API Logs
               </span>
               <span
-                className={`text-[10px] font-bold px-3 py-1 rounded-full ${
-                  response.status >= 400
+                className={`text-[10px] font-bold px-3 py-1 rounded-full ${response.status >= 400
                     ? 'bg-red-500/20 text-red-400 border border-red-500/20'
                     : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
-                }`}
+                  }`}
               >
                 HTTP {response.status}
               </span>
@@ -189,7 +188,7 @@ const App = () => {
             path="/dashboard"
             element={
               <PrivateRoute>
-                <UserView/>
+                <UserView />
               </PrivateRoute>
             }
           />
@@ -204,7 +203,36 @@ const App = () => {
               </div>
             }
           />
+        <Route
+          path="/payment/success"
+          element={
+            <PrivateRoute>
+              <PaymentSuccess />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/payment/failure"
+          element={
+            <PrivateRoute>
+              <div className="text-center py-20 flex flex-col items-center">
+                <h1 className="text-4xl font-black text-red-500 uppercase tracking-tighter">Pago Fallido</h1>
+                <p className="text-slate-400 mt-4 max-w-xs">
+                  Hubo un problema al procesar tu pago. No se ha realizado ningún cargo.
+                </p>
+                <button
+                  onClick={() => window.location.href = '/dashboard'}
+                  className="mt-8 bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-2xl font-black transition-all active:scale-95"
+                >
+                  VOLVER AL DASHBOARD
+                </button>
+              </div>
+            </PrivateRoute>
+          }
+        />
         </Routes>
+        {/* Rutas de Pago */}
 
         {/* Cart Drawer - Solo visible para usuarios no admin */}
         {user && user.role !== Role.ADMIN && (

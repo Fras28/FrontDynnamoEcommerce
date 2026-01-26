@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { X, Minus, Plus, Trash2, ShoppingBag, Loader2, CheckCircle, Tag } from 'lucide-react';
+import { X, Minus, Plus, Trash2, ShoppingBag, Loader2, Tag } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
-import { ordersApi } from '../../api/endpoints';
+import { ordersApi, paymentsApi } from '../../api/endpoints';
 import { notifications } from '@mantine/notifications';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -12,7 +12,6 @@ interface CartDrawerProps {
 const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
   const { cart, isOpen, setIsOpen, updateQuantity, removeFromCart, clearCart, getTotal, getTotalItems } = useCartStore();
   const [loading, setLoading] = useState(false);
-  const [orderComplete, setOrderComplete] = useState(false);
   const queryClient = useQueryClient();
 
   const handleCheckout = async () => {
@@ -27,37 +26,40 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
 
     setLoading(true);
     try {
+      // 1. Crear la orden en el backend
       const items = cart.map((item) => ({
         productId: item.id,
         quantity: item.quantity,
       }));
 
-      const data = await ordersApi.checkout({ items });
+      const orderData = await ordersApi.checkout({ items });
+      const orderId = orderData.orderId;
 
-      setOrderComplete(true);
+      // 2. Crear la preferencia de Mercado Pago
+      const preference = await paymentsApi.createPreference(orderId);
+
+      // 3. Limpieza y notificaciones
       clearCart();
-      
-      // Invalidar productos para actualizar stock
       queryClient.invalidateQueries({ queryKey: ['products'] });
 
       if (onOrderSuccess) {
-        onOrderSuccess(data);
+        onOrderSuccess(orderData);
       }
 
       notifications.show({
-        title: '¡Orden completada!',
-        message: 'Tu compra se procesó exitosamente',
-        color: 'green',
+        title: 'Orden generada',
+        message: 'Redirigiendo a la plataforma de pago...',
+        color: 'blue',
       });
 
-      setTimeout(() => {
-        setOrderComplete(false);
-        setIsOpen(false);
-      }, 2000);
+      // 4. Redirección a Mercado Pago
+      window.location.href = preference.initPoint;
+
     } catch (error: any) {
+      console.error('Checkout error:', error);
       notifications.show({
-        title: 'Error',
-        message: error.response?.data?.message || 'Error al procesar la orden',
+        title: 'Error en el pago',
+        message: error.response?.data?.message || 'No se pudo iniciar el proceso de pago',
         color: 'red',
       });
     } finally {
@@ -95,16 +97,6 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
           </button>
         </div>
 
-        {orderComplete && (
-          <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center z-10">
-            <div className="bg-emerald-500/20 p-6 rounded-full mb-4 animate-in zoom-in">
-              <CheckCircle size={64} className="text-emerald-400" />
-            </div>
-            <h3 className="text-2xl font-black text-white mb-2">¡Orden Completada!</h3>
-            <p className="text-slate-400">Gracias por tu compra</p>
-          </div>
-        )}
-
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
@@ -127,9 +119,6 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
                         src={item.imageUrl}
                         alt={item.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
                       />
                     ) : (
                       <Tag size={24} className="text-slate-700" />
@@ -194,7 +183,7 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
                   PROCESANDO...
                 </>
               ) : (
-                'FINALIZAR COMPRA'
+                'PAGAR CON MERCADO PAGO'
               )}
             </button>
 

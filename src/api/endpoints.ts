@@ -64,7 +64,8 @@ export const productsApi = {
 // ==================== ORDERS ====================
 export const ordersApi = {
   checkout: async (data: CreateOrderDto) => {
-    const response = await api.post<Order>('/orders/checkout', data);
+    // Retorna la orden creada con su ID
+    const response = await api.post<any>('/orders/checkout', data);
     return response.data;
   },
 
@@ -72,4 +73,23 @@ export const ordersApi = {
     const response = await api.get<Order[]>('/orders/my-orders');
     return response.data;
   },
+};
+
+// ==================== PAYMENTS ====================
+export const paymentsApi = {
+  /**
+   * Crea la preferencia de Mercado Pago para una orden específica
+   */
+  createPreference: async (orderId: number) => {
+    const response = await api.post(`/payments/create-preference/${orderId}`);
+    return response.data; // Retorna { preferenceId, initPoint, sandboxInitPoint }
+  },
+
+  /**
+   * Consulta el estado actual de un pago en la base de datos
+   */
+  getPaymentStatus: async (orderId: number) => {
+    const response = await api.get(`/payments/status/${orderId}`);
+    return response.data;
+  }
 };
