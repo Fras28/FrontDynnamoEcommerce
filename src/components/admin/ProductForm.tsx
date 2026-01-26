@@ -107,7 +107,7 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
           <input
             {...register('name')}
             placeholder="Ej: Monitor 4K"
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-white"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-black"
           />
           {errors.name && (
             <p className="text-red-400 text-xs mt-1 ml-2">{errors.name.message}</p>
@@ -121,7 +121,7 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
           <textarea
             {...register('description')}
             placeholder="Detalles técnicos..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none text-white"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none text-black"
           />
           {errors.description && (
             <p className="text-red-400 text-xs mt-1 ml-2">{errors.description.message}</p>
@@ -138,7 +138,7 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
               type="number"
               step="0.01"
               placeholder="0.00"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-white"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-black"
             />
             {errors.price && (
               <p className="text-red-400 text-xs mt-1 ml-2">{errors.price.message}</p>
@@ -152,7 +152,7 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
               {...register('stock', { valueAsNumber: true })}
               type="number"
               placeholder="0"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-white"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-indigo-500 text-black"
             />
             {errors.stock && (
               <p className="text-red-400 text-xs mt-1 ml-2">{errors.stock.message}</p>
