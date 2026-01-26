@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LogIn, UserPlus, Loader2, ShieldCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { 
+  Loader2, ShieldCheck, Mail, 
+  Lock, Eye, EyeOff, Phone, MapPin 
+} from 'lucide-react';
 import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from '../../schemas/auth';
 import { authApi } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
 import { notifications } from '@mantine/notifications';
 import { Role } from '../../types';
+import Logo from "../../assets/alquemystic.jpg"
 
-const AuthForm = () => {
+const AuthForm: React.FC = () => {
   const [view, setView] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,32 +25,42 @@ const AuthForm = () => {
     reset,
   } = useForm<LoginFormData | RegisterFormData>({
     resolver: zodResolver(view === 'login' ? loginSchema : registerSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      ...(view === 'register' && { role: Role.USER }),
-    },
+    defaultValues: view === 'login' 
+      ? {
+          email: '',
+          password: '',
+        }
+      : {
+          email: '',
+          password: '',
+          phone: '',
+          address: '',
+          role: Role.USER,
+        },
   });
 
   const onSubmit = async (data: LoginFormData | RegisterFormData) => {
     setLoading(true);
     try {
       const response = view === 'login' 
-        ? await authApi.login(data as LoginFormData)
+        ? await authApi.login(data as LoginFormData) 
         : await authApi.register(data as RegisterFormData);
+      
+      setAuth({ 
+        user: response.user, 
+        token: response.access_token 
+      });
 
-      if (response.access_token) {
-        setAuth(response.access_token);
-        notifications.show({
-          title: '¡Bienvenido!',
-          message: view === 'login' ? 'Sesión iniciada correctamente' : 'Cuenta creada exitosamente',
-          color: 'green',
-        });
-      }
+      notifications.show({
+        title: view === 'login' ? 'Bienvenido' : 'Cuenta creada',
+        message: 'Sesión iniciada correctamente',
+        color: 'indigo',
+      });
     } catch (error: any) {
+      // El error ya es manejado por el interceptor
       notifications.show({
         title: 'Error',
-        message: error.response?.data?.message || 'Error en la autenticación',
+        message: error.response?.data?.message || 'Ocurrió un error al procesar la solicitud',
         color: 'red',
       });
     } finally {
@@ -54,115 +68,127 @@ const AuthForm = () => {
     }
   };
 
-  const switchView = () => {
-    setView(view === 'login' ? 'register' : 'login');
-    reset();
+  const handleViewChange = () => {
+    const newView = view === 'login' ? 'register' : 'login';
+    setView(newView);
+    
+    // Resetear con los valores por defecto correctos según la vista
+    reset(newView === 'login' 
+      ? {
+          email: '',
+          password: '',
+        }
+      : {
+          email: '',
+          password: '',
+          phone: '',
+          address: '',
+          role: Role.USER,
+        }
+    );
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl">
-      <div className="flex flex-col items-center mb-8">
-        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/30">
-          {view === 'login' ? (
-            <LogIn className="text-white w-8 h-8" />
-          ) : (
-            <UserPlus className="text-white w-8 h-8" />
-          )}
-        </div>
-        <h2 className="text-2xl font-black text-white tracking-tight">
-          {view === 'login' ? 'BIENVENIDO' : 'ÚNETE AHORA'}
-        </h2>
-        <p className="text-slate-400 text-sm mt-1">
-          {view === 'login'
-            ? 'Ingresa tus credenciales para continuar'
-            : 'Completa los datos para registrarte'}
-        </p>
-      </div>
-
-      <div className="flex p-1 bg-slate-950 rounded-xl mb-6 border border-slate-800">
-        <button
-          onClick={() => view !== 'login' && switchView()}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-            view === 'login'
-              ? 'bg-slate-800 text-white shadow-sm'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          LOGIN
-        </button>
-        <button
-          onClick={() => view !== 'register' && switchView()}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-            view === 'register'
-              ? 'bg-slate-800 text-white shadow-sm'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          REGISTRO
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-          <input
-            {...register('email')}
-            type="email"
-            placeholder="Email corporativo"
-            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
-          />
-          {errors.email && (
-            <p className="text-red-400 text-xs mt-1 ml-2">{errors.email.message}</p>
-          )}
+    <div 
+      className="min-h-screen w-full flex items-center justify-center bg-slate-950 p-4 bg-cover bg-center bg-no-repeat"
+    >
+      <div className="w-full max-w-md space-y-8 bg-slate-900/50 p-8 rounded-[2.5rem] border border-slate-800 backdrop-blur-xl shadow-2xl">
+        <div className="text-center space-y-2">
+          <img src={Logo} alt="logo" className='m-auto w-20' />
+          <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">
+            {view === 'login' ? 'Bienvenido' : 'Crear Cuenta'}
+          </h2>
+          <p className="text-white text-xs font-bold uppercase tracking-widest">
+            {view === 'login' ? 'Ingresa tus credenciales' : 'Completa tus datos de envío'}
+          </p>
         </div>
 
-        <div className="relative">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-          <input
-            {...register('password')}
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Contraseña segura"
-            className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-12 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-indigo-400 transition-colors"
-          >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
-          {errors.password && (
-            <p className="text-red-400 text-xs mt-1 ml-2">{errors.password.message}</p>
-          )}
-        </div>
-
-        {view === 'register' && (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="relative">
-            <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-            <select
-              {...register('role' as any)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            >
-              <option value={Role.USER}>ROL: USUARIO CLIENTE</option>
-              <option value={Role.ADMIN}>ROL: ADMINISTRADOR</option>
-            </select>
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+            <input
+              {...register('email')}
+              type="email"
+              placeholder="EMAIL@EJEMPLO.COM"
+              className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-bold"
+            />
+            {errors.email && <p className="text-red-400 text-[10px] mt-1 ml-2">{errors.email.message as string}</p>}
           </div>
-        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 py-4 rounded-2xl font-black text-white transition-all flex justify-center items-center shadow-lg shadow-indigo-500/20 active:scale-95 mt-2"
-        >
-          {loading ? (
-            <Loader2 className="animate-spin" />
-          ) : view === 'login' ? (
-            'ACCEDER AL SISTEMA'
-          ) : (
-            'CREAR MI PERFIL'
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+            <input
+              {...register('password')}
+              type={showPassword ? 'text' : 'password'}
+              placeholder="CONTRASEÑA"
+              className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-bold"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+            {errors.password && <p className="text-red-400 text-[10px] mt-1 ml-2">{errors.password.message as string}</p>}
+          </div>
+
+          {view === 'register' && (
+            <>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                <input
+                  {...register('phone')}
+                  type="text"
+                  placeholder="TELÉFONO (WSP) - Ej: +54 9 11 1234-5678"
+                  className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-bold"
+                />
+                {errors.phone && 'phone' in errors && <p className="text-red-400 text-[10px] mt-1 ml-2">{errors.phone?.message as string}</p>}
+              </div>
+
+              <div className="relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                <input
+                  {...register('address')}
+                  type="text"
+                  placeholder="DIRECCIÓN DE ENVÍO - Ej: Av. Corrientes 1234, CABA"
+                  className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-bold"
+                />
+                {errors.address && 'address' in errors && <p className="text-red-400 text-[10px] mt-1 ml-2">{errors.address?.message as string}</p>}
+              </div>
+
+              <div className="relative">
+                <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                <select
+                  {...register('role')}
+                  className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-xs font-bold uppercase"
+                >
+                  <option value={Role.USER}>ROL: USUARIO CLIENTE</option>
+                  <option value={Role.ADMIN}>ROL: ADMINISTRADOR</option>
+                </select>
+                {errors.role && 'role' in errors && <p className="text-red-400 text-[10px] mt-1 ml-2">{errors.role?.message as string}</p>}
+              </div>
+            </>
           )}
-        </button>
-      </form>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 py-4 rounded-2xl font-black text-white transition-all flex justify-center items-center shadow-lg shadow-indigo-500/20 active:scale-95 mt-4 uppercase tracking-widest text-xs"
+          >
+            {loading ? <Loader2 className="animate-spin" /> : (view === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta')}
+          </button>
+        </form>
+
+        <div className="pt-6 border-t border-slate-800 text-center">
+          <button
+            onClick={handleViewChange}
+            className="text-white hover:text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] transition-colors italic"
+          >
+            {view === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Ingresa'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

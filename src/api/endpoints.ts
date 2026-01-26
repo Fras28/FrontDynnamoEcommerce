@@ -8,6 +8,9 @@ import {
   Order,
   LoginFormData,
   RegisterFormData,
+  Category,
+  CreateCategoryDto,
+  UpdateCategoryDto
 } from '@/types';
 
 // ==================== AUTH ====================
@@ -35,29 +38,46 @@ export const authApi = {
 
 // ==================== PRODUCTS ====================
 export const productsApi = {
-  getAll: async () => {
-    const response = await api.get<Product[]>('/products');
-    return response.data;
+  // Endpoints existentes
+  getAll: async (): Promise<Product[]> => {
+    const { data } = await api.get('/products');
+    return data;
   },
 
-  getById: async (id: number) => {
-    const response = await api.get<Product>(`/products/${id}`);
-    return response.data;
+  getById: async (id: number): Promise<Product> => {
+    const { data } = await api.get(`/products/${id}`);
+    return data;
   },
 
-  create: async (data: CreateProductDto) => {
-    const response = await api.post<Product>('/products', data);
-    return response.data;
+  create: async (productData: CreateProductDto): Promise<Product> => {
+    const { data } = await api.post('/products', productData);
+    return data;
   },
 
-  update: async (id: number, data: UpdateProductDto) => {
-    const response = await api.patch<Product>(`/products/${id}`, data);
-    return response.data;
+  update: async (id: number, productData: UpdateProductDto): Promise<Product> => {
+    const { data } = await api.patch(`/products/${id}`, productData);
+    return data;
   },
 
-  delete: async (id: number) => {
-    const response = await api.delete(`/products/${id}`);
-    return response.data;
+  delete: async (id: number): Promise<Product> => {
+    const { data } = await api.delete(`/products/${id}`);
+    return data;
+  },
+
+  // ✅ NUEVOS ENDPOINTS para soft delete
+  getAllIncludingInactive: async (): Promise<Product[]> => {
+    const { data } = await api.get('/products/admin/all');
+    return data;
+  },
+
+  getInactive: async (): Promise<Product[]> => {
+    const { data } = await api.get('/products/admin/inactive');
+    return data;
+  },
+
+  restore: async (id: number): Promise<Product> => {
+    const { data } = await api.patch(`/products/${id}/restore`);
+    return data;
   },
 };
 
@@ -92,4 +112,31 @@ export const paymentsApi = {
     const response = await api.get(`/payments/status/${orderId}`);
     return response.data;
   }
+};
+
+// ==================== CATEGORIES ====================
+export const categoriesApi = {
+  getAll: async (): Promise<Category[]> => {
+    const { data } = await api.get('/categories');
+    return data;
+  },
+
+  getById: async (id: number): Promise<Category> => {
+    const { data } = await api.get(`/categories/${id}`);
+    return data;
+  },
+
+  create: async (categoryData: CreateCategoryDto): Promise<Category> => {
+    const { data } = await api.post('/categories', categoryData);
+    return data;
+  },
+
+  update: async (id: number, categoryData: UpdateCategoryDto): Promise<Category> => {
+    const { data } = await api.patch(`/categories/${id}`, categoryData);
+    return data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/categories/${id}`);
+  },
 };

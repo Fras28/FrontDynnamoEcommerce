@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ShoppingBag, Trash2, Terminal, ShoppingCart as CartIcon } from 'lucide-react';
-
-
-
-
+import { ShoppingBag, Terminal, ShoppingCart as CartIcon, LogOut } from 'lucide-react';
 
 import AuthForm from './components/Auth/AuthForm';
 import { Role } from './types';
@@ -14,6 +10,7 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import UserView from './components/user/UserView';
 import CartDrawer from './components/cart/CartDrawer';
 import PaymentSuccess from './components/cart/PaymentSuccess';
+import bgFungi from "./assets/bg-fungi.webp"
 
 // Response type para el footer de logs
 interface ApiResponse {
@@ -32,182 +29,158 @@ const Layout = ({ children, response }: LayoutProps) => {
   const { getTotalItems, setIsOpen } = useCartStore();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans selection:bg-indigo-500/30">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div 
+    className="min-h-screen text-slate-200 p-4 md:p-8 font-sans selection:bg-indigo-500/30 bg-cover bg-center bg-fixed bg-no-repeat"
+    style={{ 
+      // Agregamos un degradado oscuro para que la imagen no opaque el contenido
+   backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})`
+    }}
+  >
+      <div className="max-w-6xl mx-auto space-y-8"
+      >
         {/* Navbar */}
-        <nav className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/40 backdrop-blur-sm p-6 rounded-3xl border border-slate-800 shadow-2xl">
+        <nav className="flex justify-between items-center bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem] backdrop-blur-xl shadow-2xl">
           <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-2xl shadow-lg">
-              <ShoppingBag size={24} className="text-white" />
+            <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-600/20 rotate-3">
+              <ShoppingBag className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight italic">
-                DYNAMO<span className="text-indigo-400">STORE</span>
+              <h1 className="text-2xl font-black italic tracking-tighter text-white uppercase leading-none">
+                Alquimystic <span className="text-indigo-500">Fungi Store</span>
               </h1>
-              <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.3em]">
-                Gestión de Inventario v2.0
-              </p>
+              {/* --- INFO DEL USUARIO --- */}
+              {user && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[9px] font-bold text-white uppercase tracking-tighter truncate max-w-[120px] md:max-w-none">
+                    {user.email}
+                  </span>
+                  <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest border ${
+                    user.role === Role.ADMIN 
+                      ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+                      : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
+                  }`}>
+                    {user.role}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
-          {user && (
-            <div className="flex items-center gap-4">
-              {/* Botón del carrito */}
-              {user.role !== Role.ADMIN && (
-                <button
-                  onClick={() => setIsOpen(true)}
-                  className="relative p-3 bg-slate-700 hover:bg-slate-900 border border-slate-800 rounded-2xl transition-all active:scale-95 group"
-                >
-                  <CartIcon
-                    size={20}
-                    className="text-slate-400 group-hover:text-indigo-400 transition-colors"
-                  />
-                  {getTotalItems() > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center animate-in zoom-in">
-                      {getTotalItems()}
-                    </span>
-                  )}
-                </button>
-              )}
-
-              <div className="bg-slate-700 px-5 py-2.5 rounded-2xl border border-slate-800 flex items-center gap-4 shadow-inner">
-                <div className="text-right">
-                  <p className="text-xs font-bold text-white mb-0.5">{user.email}</p>
-                  <p
-                    className={`text-[9px] font-black tracking-widest ${user.role === Role.ADMIN ? 'text-amber-400' : 'text-emerald-400'
-                      }`}
-                  >
-                    {user.role}
-                  </p>
-                </div>
-                <button
-                  onClick={logout}
-                  className="p-2.5 hover:bg-red-500/10 text-red-400 rounded-xl transition-all active:scale-90"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {user?.role !== Role.ADMIN && (
+              <button
+                onClick={() => setIsOpen(true)}
+                className="relative bg-slate-800 hover:bg-slate-700 p-3 rounded-2xl transition-all active:scale-95 group"
+              >
+                <CartIcon size={20} className="group-hover:text-indigo-400 transition-colors" />
+                {getTotalItems() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-slate-950 animate-bounce">
+                    {getTotalItems()}
+                  </span>
+                )}
+              </button>
+            )}
+            <button
+              onClick={logout}
+              className="bg-red-500/10 hover:bg-red-500/20 text-red-500 p-3 rounded-2xl transition-all active:scale-95 flex items-center gap-2 font-bold text-xs uppercase"
+            >
+              <LogOut size={18} />
+              <span className="hidden md:inline">Cerrar Sesión</span>
+            </button>
+          </div>
         </nav>
 
-        {/* Main Content */}
-        <main className="min-h-[50vh]">{children}</main>
+        <main className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {children}
+        </main>
 
-        {/* Response Footer */}
-        {response && (
-          <footer className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-            <div className="bg-slate-950 px-6 py-3 border-b border-slate-800 flex justify-between items-center">
-              <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
-                <Terminal size={14} /> API Logs
-              </span>
-              <span
-                className={`text-[10px] font-bold px-3 py-1 rounded-full ${response.status >= 400
-                    ? 'bg-red-500/20 text-red-400 border border-red-500/20'
-                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
-                  }`}
-              >
-                HTTP {response.status}
-              </span>
+        {/* Footer / Monitor */}
+        <footer className="pt-8 border-t border-slate-900">
+          <div className="bg-slate-900/30 rounded-3xl p-6 border border-slate-800/50">
+            <div className="flex items-center gap-3 mb-4">
+              <Terminal size={16} className="text-indigo-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">System Activity Monitor</span>
             </div>
-            <pre className="p-6 text-[11px] font-mono text-indigo-300 overflow-auto max-h-[160px]">
-              {JSON.stringify(response.data, null, 2)}
-            </pre>
-          </footer>
-        )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-[10px] text-slate-600 font-mono">Server Response:</p>
+                <div className="font-mono text-[11px] bg-black/40 p-3 rounded-xl border border-slate-800 overflow-x-auto">
+                  <span className={response?.status === 200 || response?.status === 201 ? 'text-emerald-400' : 'text-rose-400'}>
+                    {response ? `[${response.status}] ${JSON.stringify(response.data).substring(0, 80)}...` : 'Idle - Waiting for requests...'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-end">
+                <p className="text-[9px] font-bold text-slate-700 uppercase">© 2024 Morton Desarrollos - Dynamo Tech</p>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );
 };
 
-// Private Route Component
-interface PrivateRouteProps {
-  children: React.ReactNode;
-  requiredRole?: Role;
-}
-
-const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
+// --- PrivateRoute Component ---
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <>{children}</>;
+  return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
-// Main App Component
-const App = () => {
+function App() {
   const { user } = useAuthStore();
-  const [response, setResponse] = useState<ApiResponse | null>(null);
+  const [globalResponse, setGlobalResponse] = useState<ApiResponse | null>(null);
 
-  const handleOrderSuccess = (orderData: any) => {
-    setResponse({ status: 200, data: orderData });
+  const handleResponse = (res: ApiResponse) => {
+    setGlobalResponse(res);
   };
 
   return (
     <BrowserRouter>
-      <Layout response={response}>
-        <Routes>
-          {/* Ruta pública de autenticación */}
-          <Route
-            path="/login"
-            element={!user ? <AuthForm /> : <Navigate to="/" replace />}
-          />
-
-          {/* Ruta principal - Redirige según el rol */}
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-                {user?.role === Role.ADMIN ? (
-                  <Navigate to="/admin" replace />
-                ) : (
-                  <Navigate to="/dashboard" replace />
-                )}
-              </PrivateRoute>
-            }
-          />
-
-          {/* Ruta del panel de administrador */}
-          <Route
-            path="/admin"
-            element={
-              <PrivateRoute requiredRole={Role.ADMIN}>
-                <AdminDashboard setGlobalResponse={setResponse} />
-              </PrivateRoute>
-            }
-          />
-
-          {/* Ruta del dashboard de usuario */}
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <UserView />
-              </PrivateRoute>
-            }
-          />
-
-          {/* Ruta 404 */}
-          <Route
-            path="*"
-            element={
-              <div className="text-center py-20">
-                <h1 className="text-4xl font-black text-white">404</h1>
-                <p className="text-slate-400">Página no encontrada</p>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            user ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              // SOLUCIÓN CENTRADO: Contenedor pantalla completa
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+              style={{ 
+                // Cambiado a 0.6 para mayor transparencia de la capa oscura
+                backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})` 
+              }}
+              >
+                <AuthForm />
               </div>
-            }
-          />
+            )
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Layout response={globalResponse}>
+                {user?.role === Role.ADMIN ? (
+                  <AdminDashboard />
+                ) : (
+                  <UserView  />
+                )}
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        
         <Route
           path="/payment/success"
           element={
             <PrivateRoute>
-              <PaymentSuccess />
+              <Layout response={globalResponse}>
+                <PaymentSuccess />
+              </Layout>
             </PrivateRoute>
           }
         />
@@ -216,31 +189,35 @@ const App = () => {
           path="/payment/failure"
           element={
             <PrivateRoute>
-              <div className="text-center py-20 flex flex-col items-center">
-                <h1 className="text-4xl font-black text-red-500 uppercase tracking-tighter">Pago Fallido</h1>
-                <p className="text-slate-400 mt-4 max-w-xs">
-                  Hubo un problema al procesar tu pago. No se ha realizado ningún cargo.
-                </p>
+              <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
+                <h1 className="text-4xl font-black text-red-500 uppercase italic">Pago Fallido</h1>
+                <p className="text-slate-400 mt-4">Hubo un problema al procesar tu pago.</p>
                 <button
                   onClick={() => window.location.href = '/dashboard'}
-                  className="mt-8 bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-2xl font-black transition-all active:scale-95"
+                  className="mt-8 bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-2xl font-black uppercase text-xs"
                 >
-                  VOLVER AL DASHBOARD
+                  Volver al Dashboard
                 </button>
               </div>
             </PrivateRoute>
           }
         />
-        </Routes>
-        {/* Rutas de Pago */}
 
-        {/* Cart Drawer - Solo visible para usuarios no admin */}
-        {user && user.role !== Role.ADMIN && (
-          <CartDrawer onOrderSuccess={handleOrderSuccess} />
-        )}
-      </Layout>
+        <Route
+          path="*"
+          element={
+            <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-black italic">
+              404 | NOT FOUND
+            </div>
+          }
+        />
+      </Routes>
+
+      {user && user.role !== Role.ADMIN && (
+        <CartDrawer onOrderSuccess={handleResponse} />
+      )}
     </BrowserRouter>
   );
-};
+}
 
 export default App;

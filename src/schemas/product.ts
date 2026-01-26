@@ -22,6 +22,7 @@ export const productSchema = z.object({
     .url('Debe ser una URL válida')
     .optional()
     .or(z.literal('')),
+  categoryId: z.number().int().positive().optional(), 
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;

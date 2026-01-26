@@ -1,14 +1,16 @@
 import { create } from 'zustand';
 import { User } from '@/types';
 
+// 1. Definición de la interfaz
 interface AuthState {
   user: User | null;
   token: string | null;
-  setAuth: (token: string) => void;
+  // Recibe un objeto con user y token
+  setAuth: (args: { user: any; token: string }) => void; 
   logout: () => void;
 }
 
-// Función para decodificar JWT
+// Función para decodificar JWT (Mantenemos por si el backend no envía el user completo)
 const decodeToken = (token: string): User | null => {
   try {
     const payload = JSON.parse(
@@ -28,10 +30,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: localStorage.getItem('token'),
   
-  setAuth: (token: string) => {
-    const user = decodeToken(token);
+  // ✅ CORRECCIÓN: La implementación ahora acepta el objeto { user, token }
+  setAuth: ({ user, token }) => {
     localStorage.setItem('token', token);
-    set({ token, user });
+    set({ 
+      token, 
+      user: user || decodeToken(token) // Si el backend no envía user, intentamos decodificar el token
+    });
   },
   
   logout: () => {
@@ -40,12 +45,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 }));
 
-// Inicializar el usuario si hay un token en localStorage
-const token = localStorage.getItem('token');
-if (token) {
-  const user = decodeToken(token);
+// Lógica de hidratación inicial (opcional pero recomendada)
+const savedToken = localStorage.getItem('token');
+if (savedToken) {
+  const user = decodeToken(savedToken);
   if (user) {
-    useAuthStore.setState({ user, token });
+    useAuthStore.getState().setAuth({ user, token: savedToken });
   } else {
     localStorage.removeItem('token');
   }

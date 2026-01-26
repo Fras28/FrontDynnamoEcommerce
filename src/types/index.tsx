@@ -7,6 +7,8 @@ export enum Role {
 export enum OrderStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
 }
 
@@ -17,11 +19,17 @@ export interface User {
   role: Role;
 }
 
-// Auth Types - Ahora simple porque el interceptor extrae el "data"
+// Auth Types
 export interface AuthResponse {
   access_token: string;
   refresh_token?: string;
-  message?: string;
+  user: {
+    id: number;
+    email: string;
+    role: Role;
+    phone?: string;
+    address?: string;
+  };
 }
 
 export interface LoginFormData {
@@ -33,6 +41,25 @@ export interface RegisterFormData extends LoginFormData {
   role?: Role;
 }
 
+// Category Types
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    products: number;
+  };
+}
+
+export interface CreateCategoryDto {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateCategoryDto extends Partial<CreateCategoryDto> {}
+
 // Product Types
 export interface Product {
   id: number;
@@ -41,7 +68,14 @@ export interface Product {
   price: number;
   stock: number;
   imageUrl?: string;
+  categoryId?: number;
+  category?: Category;
+  isActive: boolean;  // ✅ NUEVO
   createdAt: string;
+  updatedAt: string;
+  _count?: {
+    items: number;  // ✅ NUEVO: Contador de órdenes
+  };
 }
 
 export interface CreateProductDto {
@@ -50,6 +84,7 @@ export interface CreateProductDto {
   price: number;
   stock: number;
   imageUrl?: string;
+  categoryId?: number;
 }
 
 export interface UpdateProductDto extends Partial<CreateProductDto> {}
@@ -83,7 +118,7 @@ export interface Order {
   }[];
 }
 
-// Wrapper genérico (por si lo necesitas en algún lugar)
+// Wrapper genérico
 export interface ApiResponseWrapper<T> {
   success: boolean;
   timestamp: string;
@@ -91,7 +126,7 @@ export interface ApiResponseWrapper<T> {
   data: T;
 }
 
-// API Response (mantén este si lo usas en otros lugares)
+// API Response
 export interface ApiResponse<T = any> {
   success: boolean;
   timestamp: string;
