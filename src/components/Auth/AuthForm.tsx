@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { 
-  Loader2, ShieldCheck, Mail, 
-  Lock, Eye, EyeOff, Phone, MapPin 
+import {
+  Loader2, ShieldCheck, Mail,
+  Lock, Eye, EyeOff, Phone, MapPin
 } from 'lucide-react';
 import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from '../../schemas/auth';
 import { authApi } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
 import { notifications } from '@mantine/notifications';
 import { Role } from '../../types';
-import Logo from "../../assets/alquemystic.jpg"
+import Logo from "../../assets/FungiLovers.png"
+import { NavLink } from 'react-router-dom';
 
 const AuthForm: React.FC = () => {
   const [view, setView] = useState<'login' | 'register'>('login');
@@ -25,30 +26,30 @@ const AuthForm: React.FC = () => {
     reset,
   } = useForm<LoginFormData | RegisterFormData>({
     resolver: zodResolver(view === 'login' ? loginSchema : registerSchema),
-    defaultValues: view === 'login' 
+    defaultValues: view === 'login'
       ? {
-          email: '',
-          password: '',
-        }
+        email: '',
+        password: '',
+      }
       : {
-          email: '',
-          password: '',
-          phone: '',
-          address: '',
-          role: Role.USER,
-        },
+        email: '',
+        password: '',
+        phone: '',
+        address: '',
+        role: Role.USER,
+      },
   });
 
   const onSubmit = async (data: LoginFormData | RegisterFormData) => {
     setLoading(true);
     try {
-      const response = view === 'login' 
-        ? await authApi.login(data as LoginFormData) 
+      const response = view === 'login'
+        ? await authApi.login(data as LoginFormData)
         : await authApi.register(data as RegisterFormData);
-      
-      setAuth({ 
-        user: response.user, 
-        token: response.access_token 
+
+      setAuth({
+        user: response.user,
+        token: response.access_token
       });
 
       notifications.show({
@@ -71,30 +72,32 @@ const AuthForm: React.FC = () => {
   const handleViewChange = () => {
     const newView = view === 'login' ? 'register' : 'login';
     setView(newView);
-    
+
     // Resetear con los valores por defecto correctos según la vista
-    reset(newView === 'login' 
+    reset(newView === 'login'
       ? {
-          email: '',
-          password: '',
-        }
+        email: '',
+        password: '',
+      }
       : {
-          email: '',
-          password: '',
-          phone: '',
-          address: '',
-          role: Role.USER,
-        }
+        email: '',
+        password: '',
+        phone: '',
+        address: '',
+        role: Role.USER,
+      }
     );
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen w-full flex items-center justify-center bg-slate-950 p-4 bg-cover bg-center bg-no-repeat"
     >
       <div className="w-full max-w-md space-y-8 bg-slate-900/50 p-8 rounded-[2.5rem] border border-slate-800 backdrop-blur-xl shadow-2xl">
         <div className="text-center space-y-2">
-          <img src={Logo} alt="logo" className='m-auto w-20' />
+          <NavLink to="/">
+            <img src={Logo} alt="logo" className='m-auto w-36 md:w-40' />
+          </NavLink>
           <h2 className="text-3xl font-black text-white uppercase tracking-tighter italic">
             {view === 'login' ? 'Bienvenido' : 'Crear Cuenta'}
           </h2>
@@ -143,7 +146,14 @@ const AuthForm: React.FC = () => {
                   placeholder="TELÉFONO (WSP) - Ej: +54 9 11 1234-5678"
                   className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-bold"
                 />
-                {errors.phone && 'phone' in errors && <p className="text-red-400 text-[10px] mt-1 ml-2">{errors.phone?.message as string}</p>}
+                {/* Usamos (errors as RegisterFormData) para indicarle a TS 
+          que en este bloque estamos tratando con los errores de registro 
+      */}
+                {(errors as any).phone && (
+                  <p className="text-red-400 text-[10px] mt-1 ml-2">
+                    {(errors as any).phone?.message}
+                  </p>
+                )}
               </div>
 
               <div className="relative">
@@ -154,9 +164,12 @@ const AuthForm: React.FC = () => {
                   placeholder="DIRECCIÓN DE ENVÍO - Ej: Av. Corrientes 1234, CABA"
                   className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-bold"
                 />
-                {errors.address && 'address' in errors && <p className="text-red-400 text-[10px] mt-1 ml-2">{errors.address?.message as string}</p>}
+                {(errors as any).address && (
+                  <p className="text-red-400 text-[10px] mt-1 ml-2">
+                    {(errors as any).address?.message}
+                  </p>
+                )}
               </div>
-
               <div className="relative">
                 <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
                 <select
@@ -166,7 +179,11 @@ const AuthForm: React.FC = () => {
                   <option value={Role.USER}>ROL: USUARIO CLIENTE</option>
                   <option value={Role.ADMIN}>ROL: ADMINISTRADOR</option>
                 </select>
-                {errors.role && 'role' in errors && <p className="text-red-400 text-[10px] mt-1 ml-2">{errors.role?.message as string}</p>}
+                {(errors as any).role && (
+                  <p className="text-red-400 text-[10px] mt-1 ml-2">
+                    {(errors as any).role?.message}
+                  </p>
+                )}
               </div>
             </>
           )}

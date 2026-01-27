@@ -36,45 +36,51 @@ export const authApi = {
   },
 };
 
-// ==================== PRODUCTS ====================
+// ============= PRODUCTS API =============
 export const productsApi = {
-  // Endpoints existentes
+  // ✅ Obtener productos activos (público)
   getAll: async (): Promise<Product[]> => {
     const { data } = await api.get('/products');
     return data;
   },
 
+  // ✅ Obtener un producto por ID
   getById: async (id: number): Promise<Product> => {
     const { data } = await api.get(`/products/${id}`);
     return data;
   },
 
-  create: async (productData: CreateProductDto): Promise<Product> => {
-    const { data } = await api.post('/products', productData);
-    return data;
-  },
-
-  update: async (id: number, productData: UpdateProductDto): Promise<Product> => {
-    const { data } = await api.patch(`/products/${id}`, productData);
-    return data;
-  },
-
-  delete: async (id: number): Promise<Product> => {
-    const { data } = await api.delete(`/products/${id}`);
-    return data;
-  },
-
-  // ✅ NUEVOS ENDPOINTS para soft delete
+  // ✅ NUEVO: Obtener TODOS los productos incluidos inactivos (admin)
   getAllIncludingInactive: async (): Promise<Product[]> => {
     const { data } = await api.get('/products/admin/all');
     return data;
   },
 
+  // ✅ NUEVO: Obtener solo productos inactivos (admin)
   getInactive: async (): Promise<Product[]> => {
     const { data } = await api.get('/products/admin/inactive');
     return data;
   },
 
+  // ✅ Crear producto
+  create: async (productData: CreateProductDto): Promise<Product> => {
+    const { data } = await api.post('/products', productData);
+    return data;
+  },
+
+  // ✅ Actualizar producto
+  update: async (id: number, productData: UpdateProductDto): Promise<Product> => {
+    const { data } = await api.patch(`/products/${id}`, productData);
+    return data;
+  },
+
+  // ✅ Eliminar producto (soft/hard delete)
+  delete: async (id: number): Promise<any> => {
+    const { data } = await api.delete(`/products/${id}`);
+    return data;
+  },
+
+  // ✅ NUEVO: Reactivar producto inactivo
   restore: async (id: number): Promise<Product> => {
     const { data } = await api.patch(`/products/${id}/restore`);
     return data;

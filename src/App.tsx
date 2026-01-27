@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ShoppingBag, Terminal, ShoppingCart as CartIcon, LogOut } from 'lucide-react';
 
 import AuthForm from './components/Auth/AuthForm';
+import LandingPage from './components/landing/Landingpage';
 import { Role } from './types';
 import { useAuthStore } from './store/authStore';
 import { useCartStore } from './store/cartStore';
@@ -11,6 +12,7 @@ import UserView from './components/user/UserView';
 import CartDrawer from './components/cart/CartDrawer';
 import PaymentSuccess from './components/cart/PaymentSuccess';
 import bgFungi from "./assets/bg-fungi.webp"
+import Logo from "./assets/FungiLovers.png"
 
 // Response type para el footer de logs
 interface ApiResponse {
@@ -29,36 +31,36 @@ const Layout = ({ children, response }: LayoutProps) => {
   const { getTotalItems, setIsOpen } = useCartStore();
 
   return (
-    <div 
-    className="min-h-screen text-slate-200 p-4 md:p-8 font-sans selection:bg-indigo-500/30 bg-cover bg-center bg-fixed bg-no-repeat"
-    style={{ 
-      // Agregamos un degradado oscuro para que la imagen no opaque el contenido
-   backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})`
-    }}
-  >
-      <div className="max-w-6xl mx-auto space-y-8"
-      >
+    <div
+      className="min-h-screen text-slate-200 p-4 md:p-8 font-sans selection:bg-indigo-500/30 bg-cover bg-center bg-fixed bg-no-repeat"
+      style={{
+        backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})`
+      }}
+    >
+      <div className="max-w-6xl mx-auto space-y-8">
         {/* Navbar */}
         <nav className="flex justify-between items-center bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem] backdrop-blur-xl shadow-2xl">
-          <div className="flex items-center gap-4">
-            <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-600/20 rotate-3">
-              <ShoppingBag className="text-white" size={24} />
-            </div>
+          <div className="flex items-center gap-0">
+
+            <img
+              src={Logo}
+              alt="FungiLovers"
+              className="w-[50px] md:w-[100px] h-auto object-contain"
+            />
+
             <div>
-              <h1 className="text-2xl font-black italic tracking-tighter text-white uppercase leading-none">
-                Alquimystic <span className="text-indigo-500">Fungi Store</span>
+              <h1 className=" font-black italic tracking-tighter text-white uppercase leading-none">
+                FungiLovers <span className="text-indigo-500"> Store</span>
               </h1>
-              {/* --- INFO DEL USUARIO --- */}
               {user && (
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[9px] font-bold text-white uppercase tracking-tighter truncate max-w-[120px] md:max-w-none">
                     {user.email}
                   </span>
-                  <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest border ${
-                    user.role === Role.ADMIN 
-                      ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+                  <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest border ${user.role === Role.ADMIN
+                      ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                       : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
-                  }`}>
+                    }`}>
                     {user.role}
                   </span>
                 </div>
@@ -66,7 +68,7 @@ const Layout = ({ children, response }: LayoutProps) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {user?.role !== Role.ADMIN && (
               <button
                 onClick={() => setIsOpen(true)}
@@ -97,18 +99,18 @@ const Layout = ({ children, response }: LayoutProps) => {
         {/* Footer / Monitor */}
         <footer className="pt-8 border-t border-slate-900">
           <div className="bg-slate-900/30 rounded-3xl p-6 border border-slate-800/50">
-            <div className="flex items-center gap-3 mb-4">
+            {/* <div className="flex items-center gap-3 mb-4">
               <Terminal size={16} className="text-indigo-500" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">System Activity Monitor</span>
-            </div>
+            </div> */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-[10px] text-slate-600 font-mono">Server Response:</p>
+                {/* <p className="text-[10px] text-slate-600 font-mono">Server Response:</p>
                 <div className="font-mono text-[11px] bg-black/40 p-3 rounded-xl border border-slate-800 overflow-x-auto">
                   <span className={response?.status === 200 || response?.status === 201 ? 'text-emerald-400' : 'text-rose-400'}>
                     {response ? `[${response.status}] ${JSON.stringify(response.data).substring(0, 80)}...` : 'Idle - Waiting for requests...'}
                   </span>
-                </div>
+                </div> */}
               </div>
               <div className="flex items-center justify-end">
                 <p className="text-[9px] font-bold text-slate-700 uppercase">© 2024 Morton Desarrollos - Dynamo Tech</p>
@@ -121,7 +123,7 @@ const Layout = ({ children, response }: LayoutProps) => {
   );
 };
 
-// --- PrivateRoute Component ---
+// PrivateRoute Component
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuthStore();
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -138,18 +140,23 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ✅ NUEVA RUTA: Landing Page */}
+        <Route
+          path="/"
+          element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />}
+        />
+
         <Route
           path="/login"
           element={
             user ? (
               <Navigate to="/dashboard" replace />
             ) : (
-              // SOLUCIÓN CENTRADO: Contenedor pantalla completa
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-              style={{ 
-                // Cambiado a 0.6 para mayor transparencia de la capa oscura
-                backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})` 
-              }}
+              <div
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                style={{
+                  backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})`
+                }}
               >
                 <AuthForm />
               </div>
@@ -165,15 +172,13 @@ function App() {
                 {user?.role === Role.ADMIN ? (
                   <AdminDashboard />
                 ) : (
-                  <UserView  />
+                  <UserView />
                 )}
               </Layout>
             </PrivateRoute>
           }
         />
 
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
         <Route
           path="/payment/success"
           element={
