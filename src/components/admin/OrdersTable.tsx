@@ -40,7 +40,7 @@ const OrdersTable = ({ orders, onUpdateStatus }: OrdersTableProps) => {
               <div className="flex justify-between items-start relative z-10">
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <span className="bg-white text-slate-950 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">ORDEN #{order.id}</span>
+                    <span className="bg-white text-slate-950 text-[9px] font-black text-black px-3 py-1 rounded-full uppercase tracking-tighter">ORDEN #{order.id}</span>
                     <span className={`text-[9px] font-black px-3 py-1 rounded-full border uppercase tracking-widest ${getStatusStyle(order.status)}`}>{order.status}</span>
                   </div>
                   <p className="text-[10px] font-bold text-slate-500 flex items-center gap-1.5 uppercase">

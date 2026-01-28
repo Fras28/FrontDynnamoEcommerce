@@ -70,11 +70,11 @@ export interface Product {
   imageUrl?: string;
   categoryId?: number;
   category?: Category;
-  isActive: boolean;  // ✅ NUEVO
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
   _count?: {
-    items: number;  // ✅ NUEVO: Contador de órdenes
+    items: number;
   };
 }
 
@@ -116,6 +116,57 @@ export interface Order {
     quantity: number;
     price: number;
   }[];
+}
+
+// ✅ TIPOS DE MÉTRICAS - NUEVOS
+export interface DashboardMetrics {
+  totalRevenue: number;
+  totalOrders: number;
+  totalCustomers: number;
+  totalProducts: number;
+  pendingOrders: number;
+  completedOrdersToday: number;
+  averageOrderValue: number;
+}
+
+export interface SalesMetrics {
+  totalRevenue: number;
+  totalOrders: number;
+  averageOrderValue: number;
+  growthRate: number;
+}
+
+export interface TopProduct {
+  productId: number;
+  productName: string;
+  totalQuantity: number;
+  totalRevenue: number;
+  orderCount: number;
+  category?: string;
+  imageUrl?: string;
+}
+
+export interface TopCustomer {
+  userId: number;
+  email: string;
+  totalSpent: number;
+  orderCount: number;
+  lastOrderDate: string;
+  phone?: string;
+}
+
+export interface RevenueByPeriod {
+  period: string;
+  revenue: number;
+  orders: number;
+}
+
+export interface SalesByCategory {
+  categoryId: number;
+  categoryName: string;
+  totalRevenue: number;
+  totalQuantity: number;
+  productsCount: number;
 }
 
 // Wrapper genérico

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Package, ClipboardList, BarChart3, TrendingUp, Tag, Archive } from 'lucide-react';
+import { Loader2, Package, ClipboardList, BarChart3, TrendingUp, Tag, Archive, PieChart } from 'lucide-react';
 import { useProducts, useInactiveProducts } from '../../hooks/useProducts';
 import { useAdminOrders, useUpdateOrderStatus } from '../../hooks/useOrders';
 import { useCategories } from '../../hooks/useCategories';
@@ -9,9 +9,10 @@ import ProductForm from './categorias/ProductForm';
 import CategoryForm from './categorias/Categoryform';
 import CategoriesTable from './categorias/CategoriesTable';
 import OrdersTable from './OrdersTable';
+import MetricsDashboard from './MetricsDashboard';
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'inventory' | 'orders' | 'categories' | 'inactive'>('inventory');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'inventory' | 'orders' | 'categories' | 'inactive'>('metrics');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
@@ -51,6 +52,18 @@ const AdminDashboard = () => {
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Selector de Pestañas Estilo Terminal */}
       <div className="flex flex-wrap gap-4 p-1.5 bg-slate-900 border border-slate-800 rounded-[2rem] w-fit mx-auto md:mx-0">
+        {/* ✅ NUEVA PESTAÑA: Métricas */}
+        <button
+          onClick={() => setActiveTab('metrics')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest ${
+            activeTab === 'metrics' 
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-600/20' 
+              : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          <PieChart size={14} /> Métricas
+        </button>
+
         <button
           onClick={() => setActiveTab('inventory')}
           className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest ${
@@ -73,7 +86,6 @@ const AdminDashboard = () => {
           <Tag size={14} /> Categorías
         </button>
 
-        {/* ✅ NUEVA PESTAÑA: Productos Inactivos */}
         <button
           onClick={() => setActiveTab('inactive')}
           className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest relative ${
@@ -83,7 +95,6 @@ const AdminDashboard = () => {
           }`}
         >
           <Archive size={14} /> Inactivos
-          {/* Badge con contador de productos inactivos */}
           {inactiveProducts && inactiveProducts.length > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
               {inactiveProducts.length}
@@ -103,7 +114,10 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      {activeTab === 'inventory' ? (
+      {/* ✅ NUEVO: Pestaña de Métricas */}
+      {activeTab === 'metrics' ? (
+        <MetricsDashboard />
+      ) : activeTab === 'inventory' ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-5 lg:sticky lg:top-8">
             <ProductForm editingProduct={editingProduct} onCancel={() => setEditingProduct(null)} />
@@ -140,7 +154,6 @@ const AdminDashboard = () => {
           </div>
         </div>
       ) : activeTab === 'inactive' ? (
-        // ✅ NUEVA SECCIÓN: Productos Inactivos
         <div className="space-y-6">
           <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-6">
             <div className="flex items-start gap-4">
