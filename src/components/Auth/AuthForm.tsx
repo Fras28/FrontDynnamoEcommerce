@@ -170,7 +170,7 @@ const AuthForm: React.FC = () => {
                   </p>
                 )}
               </div>
-              <div className="relative">
+              {/* <div className="relative">
                 <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
                 <select
                   {...register('role')}
@@ -184,7 +184,7 @@ const AuthForm: React.FC = () => {
                     {(errors as any).role?.message}
                   </p>
                 )}
-              </div>
+              </div> */}
             </>
           )}
 
