@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Loader2, ShieldCheck, Mail,
+  Loader2, Mail,
   Lock, Eye, EyeOff, Phone, MapPin
 } from 'lucide-react';
 import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from '../../schemas/auth';
@@ -47,23 +47,126 @@ const AuthForm: React.FC = () => {
         ? await authApi.login(data as LoginFormData)
         : await authApi.register(data as RegisterFormData);
 
-      setAuth({
-        user: response.user,
-        token: response.access_token
-      });
+      if (view === 'login') {
+        // Login exitoso
+        setAuth({
+          user: response.user,
+          token: response.access_token
+        });
 
-      notifications.show({
-        title: view === 'login' ? 'Bienvenido' : 'Cuenta creada',
-        message: 'Sesión iniciada correctamente',
-        color: 'indigo',
-      });
+        notifications.show({
+          title: 'Bienvenido',
+          message: 'Sesión iniciada correctamente',
+          color: 'indigo',
+        });
+      } else {
+        // Registro exitoso - Mostrar notificación especial
+        notifications.show({
+          title: '📧 ¡Registro Exitoso!',
+          message: (
+            <div className="space-y-2">
+              <p className="font-semibold">¡Tu cuenta ha sido creada!</p>
+              <p className="text-sm">
+                Te hemos enviado un correo electrónico a{' '}
+                <span className="font-bold text-indigo-600">{(data as RegisterFormData).email}</span>
+              </p>
+              <p className="text-sm">
+                Por favor, revisa tu bandeja de entrada y confirma tu cuenta haciendo clic en el enlace de verificación.
+              </p>
+              <div className="mt-3 p-2 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                <p className="text-xs text-yellow-800 font-semibold">
+                  ⚠️ Importante: Si no recibes el correo en los próximos minutos:
+                </p>
+                <ul className="text-xs text-yellow-700 mt-1 ml-4 list-disc space-y-1">
+                  <li>Revisa tu carpeta de <strong>Spam</strong> o <strong>Correo no deseado</strong></li>
+                  <li>Verifica que el email sea correcto</li>
+                  <li>Agrega nuestro email a tus contactos para futuros envíos</li>
+                </ul>
+              </div>
+            </div>
+          ),
+          color: 'green',
+          autoClose: 12000, // Se cierra automáticamente después de 12 segundos
+          withCloseButton: true,
+        });
+
+        // Cambiar automáticamente a la vista de login después de mostrar la notificación
+        setTimeout(() => {
+          setView('login');
+          reset({
+            email: (data as RegisterFormData).email, // Pre-llenar el email
+            password: '',
+          });
+        }, 1000);
+      }
     } catch (error: any) {
-      // El error ya es manejado por el interceptor
-      notifications.show({
-        title: 'Error',
-        message: error.response?.data?.message || 'Ocurrió un error al procesar la solicitud',
-        color: 'red',
-      });
+      const errorMessage = error.response?.data?.message || 'Ocurrió un error al procesar la solicitud';
+      const errorStatus = error.response?.status;
+
+      // Manejo específico de errores para el login
+      if (view === 'login') {
+        // Usuario no verificado
+        if (errorMessage.toLowerCase().includes('verific') || 
+            errorMessage.toLowerCase().includes('confirm') ||
+            errorMessage.toLowerCase().includes('activar') ||
+            errorStatus === 403) {
+          notifications.show({
+            title: '⚠️ Cuenta no verificada',
+            message: (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Tu cuenta aún no ha sido verificada</p>
+                <p className="text-sm">
+                  Revisa tu correo electrónico y haz clic en el enlace de verificación que te enviamos.
+                </p>
+                <p className="text-xs text-gray-600 mt-2">
+                  💡 Si no encuentras el correo, revisa tu carpeta de <strong>Spam</strong>.
+                </p>
+                <p className="text-xs text-gray-600">
+                  ¿No recibiste el correo? Contáctanos para reenviarlo.
+                </p>
+              </div>
+            ),
+            color: 'orange',
+            autoClose: 10000,
+            withCloseButton: true,
+          });
+        }
+        // Usuario no registrado
+        else if (errorMessage.toLowerCase().includes('no encontrado') || 
+                 errorMessage.toLowerCase().includes('not found') ||
+                 errorMessage.toLowerCase().includes('no existe') ||
+                 errorStatus === 404) {
+          notifications.show({
+            title: '❌ Usuario no encontrado',
+            message: (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">No existe una cuenta con este correo electrónico</p>
+                <p className="text-sm">
+                  ¿Aún no tienes cuenta? Regístrate haciendo clic en el enlace de abajo.
+                </p>
+              </div>
+            ),
+            color: 'red',
+            autoClose: 8000,
+            withCloseButton: true,
+          });
+        }
+        // Contraseña incorrecta u otros errores
+        else {
+          notifications.show({
+            title: 'Error de autenticación',
+            message: errorMessage,
+            color: 'red',
+          });
+        }
+      } else {
+        // Errores en el registro
+        notifications.show({
+          title: 'Error',
+          message: errorMessage,
+          color: 'red',
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -146,9 +249,6 @@ const AuthForm: React.FC = () => {
                   placeholder="TELÉFONO (WSP) - Ej: +54 9 11 1234-5678"
                   className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-bold"
                 />
-                {/* Usamos (errors as RegisterFormData) para indicarle a TS 
-          que en este bloque estamos tratando con los errores de registro 
-      */}
                 {(errors as any).phone && (
                   <p className="text-red-400 text-[10px] mt-1 ml-2">
                     {(errors as any).phone?.message}
@@ -170,21 +270,6 @@ const AuthForm: React.FC = () => {
                   </p>
                 )}
               </div>
-              {/* <div className="relative">
-                <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                <select
-                  {...register('role')}
-                  className="w-full bg-white border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-black appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-xs font-bold uppercase"
-                >
-                  <option value={Role.USER}>ROL: USUARIO CLIENTE</option>
-                  <option value={Role.ADMIN}>ROL: ADMINISTRADOR</option>
-                </select>
-                {(errors as any).role && (
-                  <p className="text-red-400 text-[10px] mt-1 ml-2">
-                    {(errors as any).role?.message}
-                  </p>
-                )}
-              </div> */}
             </>
           )}
 
