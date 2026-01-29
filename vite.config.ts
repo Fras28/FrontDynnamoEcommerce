@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+// Importamos el package.json para obtener la versión
+import packageJson from './package.json';
 
 export default defineConfig({
   plugins: [
@@ -47,5 +49,21 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Inyección de variables para versionado
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(packageJson.version),
+    'import.meta.env.VITE_BUILD_DATE': JSON.stringify(new Date().toISOString()),
+  },
+  // Mantener soporte para modelos 3D
   assetsInclude: ['**/*.glb', '**/*.gltf'],
+  build: {
+    rollupOptions: {
+      output: {
+        // Optimización de chunks para mejorar la carga inicial
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
 });

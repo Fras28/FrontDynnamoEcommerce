@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ShoppingBag, Terminal, ShoppingCart as CartIcon, LogOut } from 'lucide-react';
+import {  ShoppingCart as CartIcon, LogOut } from 'lucide-react';
 
 import AuthForm from './components/Auth/AuthForm';
 import LandingPage from './components/landing/Landingpage';
@@ -11,9 +11,17 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import UserView from './components/user/UserView';
 import CartDrawer from './components/cart/CartDrawer';
 import PaymentSuccess from './components/cart/PaymentSuccess';
+
 import bgFungi from "./assets/bg-fungi.webp"
 import Logo from "./assets/FungiLovers.png"
+import VersionBadge from './components/comon/VersionBadge';
+import { VERSION_INFO } from '@/utils/version';
 
+// Esto se verá cada vez que recargues la página en la consola
+console.log(
+  `%c🚀 ${VERSION_INFO.name} v${VERSION_INFO.version} | ${VERSION_INFO.environment}`, 
+  "color: #0fe778; font-weight: bold; font-size: 12px;"
+);
 // Response type para el footer de logs
 interface ApiResponse {
   status: number;
@@ -99,21 +107,21 @@ const Layout = ({ children, response }: LayoutProps) => {
         {/* Footer / Monitor */}
         <footer className="pt-8 border-t border-slate-900">
           <div className="bg-slate-900/30 rounded-3xl p-6 border border-slate-800/50">
-            {/* <div className="flex items-center gap-3 mb-4">
-              <Terminal size={16} className="text-indigo-500" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">System Activity Monitor</span>
-            </div> */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                {/* <p className="text-[10px] text-slate-600 font-mono">Server Response:</p>
-                <div className="font-mono text-[11px] bg-black/40 p-3 rounded-xl border border-slate-800 overflow-x-auto">
-                  <span className={response?.status === 200 || response?.status === 201 ? 'text-emerald-400' : 'text-rose-400'}>
-                    {response ? `[${response.status}] ${JSON.stringify(response.data).substring(0, 80)}...` : 'Idle - Waiting for requests...'}
-                  </span>
-                </div> */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              {/* Información de versión */}
+              <div className="flex items-center gap-4">
+                <VersionBadge variant="tooltip" />
+                <div className="h-6 w-px bg-slate-800 hidden md:block" />
+                <p className="text-[9px] font-bold text-slate-700 uppercase hidden md:block">
+                  Morton Desarrollos - Dynamo Tech
+                </p>
               </div>
+
+              {/* Copyright */}
               <div className="flex items-center justify-end">
-                <p className="text-[9px] font-bold text-slate-700 uppercase">© 2024 Morton Desarrollos - Dynamo Tech</p>
+                <p className="text-[9px] font-bold text-slate-700 uppercase text-center md:text-right">
+                  © 2024 Morton Desarrollos - Dynamo Tech
+                </p>
               </div>
             </div>
           </div>
