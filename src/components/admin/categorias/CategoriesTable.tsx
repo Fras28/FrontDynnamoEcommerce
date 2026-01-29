@@ -32,7 +32,7 @@ const CategoriesTable = ({ categories, onEdit }: CategoriesTableProps) => {
       children: (
         <div className="space-y-3">
           <p className="text-sm text-slate-400">
-            ¿Estás seguro de eliminar <span className="text-white font-bold">"{category.name}"</span>?
+            ¿Estás seguro de eliminar <span className="text-red-500 font-bold">"{category.name}"</span>?
           </p>
           {category._count && category._count.products > 0 && (
             <p className="text-xs text-amber-500 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">

@@ -50,7 +50,7 @@ const ProductsTable = ({ products, onEdit, showInactive = false }: ProductsTable
       title: <span className="font-black uppercase italic text-red-500">Eliminar Producto</span>,
       children: (
         <p className="text-sm text-slate-400">
-          ¿Estás seguro de eliminar <span className="text-white font-bold">"{product.name}"</span>?
+          ¿Estás seguro de eliminar <span className="text-red-500 font-bold">"{product.name}"</span>?
         </p>
       ),
       labels: { confirm: 'ELIMINAR', cancel: 'CANCELAR' },

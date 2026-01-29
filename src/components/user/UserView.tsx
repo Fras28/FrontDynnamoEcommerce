@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Loader2, Store, ShoppingBag, Plus, Info, Tag, Filter } from 'lucide-react';
+import { Loader2, Store, ShoppingBag, Plus, Info, Tag, Filter, AlertCircle, CheckCircle } from 'lucide-react';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
 import { useCartStore } from '../../store/cartStore';
 import { Product } from '../../types';
+import { notifications } from '@mantine/notifications';
 import UserOrders from './UserOrders';
 
 const UserView = () => {
@@ -12,10 +13,48 @@ const UserView = () => {
   
   const { data: products, isLoading } = useProducts();
   const { data: categories, isLoading: loadingCategories } = useCategories();
-  const { addToCart } = useCartStore();
+  const { addToCart, cart } = useCartStore();
 
   const handleAddToCart = (product: Product) => {
+    // ✅ NUEVO: Verificar stock disponible
+    if (product.stock === 0) {
+      notifications.show({
+        title: 'Producto agotado',
+        message: `"${product.name}" no tiene stock disponible actualmente`,
+        color: 'red',
+        icon: <AlertCircle size={18} />,
+        autoClose: 4000,
+      });
+      return;
+    }
+
+    // ✅ NUEVO: Verificar si ya está en el carrito y el límite de stock
+    const itemInCart = cart.find(item => item.id === product.id);
+    if (itemInCart) {
+      const newQuantity = itemInCart.quantity + 1;
+      if (newQuantity > product.stock) {
+        notifications.show({
+          title: 'Stock insuficiente',
+          message: `Solo hay ${product.stock} unidades disponibles de "${product.name}"`,
+          color: 'orange',
+          icon: <AlertCircle size={18} />,
+          autoClose: 4000,
+        });
+        return;
+      }
+    }
+
+    // Agregar al carrito
     addToCart(product, 1);
+    
+    // ✅ NUEVO: Notificación de éxito mejorada
+    notifications.show({
+      title: 'Producto agregado',
+      message: `"${product.name}" se agregó al carrito`,
+      color: 'green',
+      icon: <CheckCircle size={18} />,
+      autoClose: 2000,
+    });
   };
 
   // Filtrar productos por categoría seleccionada
@@ -143,63 +182,145 @@ const UserView = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts?.map((product: Product) => (
-                <div
-                  key={product.id}
-                  className="group bg-slate-900 border border-slate-800 rounded-[2.5rem] p-4 hover:border-indigo-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 flex flex-col"
-                >
-                  {/* Imagen del Producto */}
-                  <div className="relative aspect-square mb-6 overflow-hidden rounded-[2rem] bg-slate-950 border border-slate-800/50">
-                    <img
-                      src={product.imageUrl || '/placeholder.png'}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="bg-slate-950/80 backdrop-blur-md text-indigo-400 text-[10px] font-black px-3 py-1.5 rounded-full border border-indigo-500/30 flex items-center gap-1">
-                        <Tag size={10} /> DISPONIBLE
-                      </span>
-                    </div>
-                    {/* Mostrar categoría del producto */}
-                    {product.category && (
-                      <div className="absolute top-4 right-4">
-                        <span className="bg-purple-950/80 backdrop-blur-md text-purple-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-purple-500/30">
-                          {product.category.name.toUpperCase()}
-                        </span>
+              {filteredProducts?.map((product: Product) => {
+                const isLowStock = product.stock <= 5 && product.stock > 0;
+                const isOutOfStock = product.stock === 0;
+                const itemInCart = cart.find(item => item.id === product.id);
+                const remainingStock = product.stock - (itemInCart?.quantity || 0);
+
+                return (
+                  <div
+                    key={product.id}
+                    className={`group bg-slate-900 border rounded-[2.5rem] p-4 transition-all duration-500 hover:shadow-2xl flex flex-col ${
+                      isOutOfStock 
+                        ? 'border-slate-800/50 opacity-60' 
+                        : 'border-slate-800 hover:border-indigo-500/50 hover:shadow-indigo-500/10'
+                    }`}
+                  >
+                    {/* Imagen del Producto */}
+                    <div className="relative aspect-square mb-6 overflow-hidden rounded-[2rem] bg-slate-950 border border-slate-800/50">
+                      <img
+                        src={product.imageUrl || '/placeholder.png'}
+                        alt={product.name}
+                        className={`w-full h-full object-cover transition-transform duration-700 ${
+                          !isOutOfStock && 'group-hover:scale-110'
+                        }`}
+                      />
+                      
+                      {/* ✅ NUEVO: Badges de estado de stock */}
+                      <div className="absolute top-4 left-4 flex flex-col gap-2">
+                        {isOutOfStock ? (
+                          <span className="bg-red-950/90 backdrop-blur-md text-red-400 text-[10px] font-black px-3 py-1.5 rounded-full border border-red-500/30 flex items-center gap-1">
+                            <AlertCircle size={10} /> SIN STOCK
+                          </span>
+                        ) : isLowStock ? (
+                          <span className="bg-amber-950/90 backdrop-blur-md text-amber-400 text-[10px] font-black px-3 py-1.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                            <AlertCircle size={10} /> ¡ÚLTIMAS {product.stock}!
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-950/90 backdrop-blur-md text-emerald-400 text-[10px] font-black px-3 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                            <CheckCircle size={10} /> DISPONIBLE
+                          </span>
+                        )}
+                        
+                        {/* Mostrar unidades en carrito */}
+                        {itemInCart && itemInCart.quantity > 0 && (
+                          <span className="bg-indigo-950/90 backdrop-blur-md text-indigo-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-indigo-500/30">
+                            {itemInCart.quantity} en carrito
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Info del Producto */}
-                  <div className="px-2 space-y-3 flex-1">
-                    <div className="flex justify-between items-start gap-2">
-                      <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-1 italic">
-                        {product.name}
-                      </h3>
-                      <p className="text-xl font-black text-indigo-400 tracking-tighter">
-                        ${Number(product.price).toLocaleString()}
+                      {/* Mostrar categoría del producto */}
+                      {product.category && (
+                        <div className="absolute top-4 right-4">
+                          <span className="bg-purple-950/80 backdrop-blur-md text-purple-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-purple-500/30">
+                            {product.category.name.toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* ✅ NUEVO: Overlay cuando está agotado */}
+                      {isOutOfStock && (
+                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                          <span className="bg-red-500/20 text-red-400 px-6 py-3 rounded-2xl font-black text-sm border border-red-500/30">
+                            AGOTADO
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info del Producto */}
+                    <div className="px-2 space-y-3 flex-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <h3 className={`text-lg font-bold transition-colors line-clamp-1 italic ${
+                          isOutOfStock ? 'text-slate-500' : 'text-white group-hover:text-indigo-400'
+                        }`}>
+                          {product.name}
+                        </h3>
+                        <p className={`text-xl font-black tracking-tighter ${
+                          isOutOfStock ? 'text-slate-600' : 'text-indigo-400'
+                        }`}>
+                          ${Number(product.price).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <p className="text-slate-400 text-sm line-clamp-2 min-h-[40px] leading-relaxed">
+                        {product.description || 'Sin descripción detallada disponible.'}
                       </p>
-                    </div>
 
-                    <p className="text-slate-400 text-sm line-clamp-2 min-h-[40px] leading-relaxed">
-                      {product.description || 'Sin descripción detallada disponible.'}
-                    </p>
+                      {/* ✅ NUEVO: Indicador de stock restante */}
+                      {!isOutOfStock && itemInCart && (
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-2">
+                          <p className="text-[10px] text-slate-400 font-bold">
+                            {remainingStock > 0 ? (
+                              <>
+                                <span className="text-indigo-400">{remainingStock}</span> unidades restantes
+                              </>
+                            ) : (
+                              <span className="text-amber-400">Has alcanzado el límite de stock</span>
+                            )}
+                          </p>
+                        </div>
+                      )}
 
-                    <div className="pt-4 flex gap-2">
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-2xl font-black text-[10px] tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/20"
-                        disabled={product.stock <= 0}
-                      >
-                        <Plus size={16} /> AGREGAR
-                      </button>
-                      <button className="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl transition-colors active:scale-95 border border-slate-700/50">
-                        <Info size={18} />
-                      </button>
+                      <div className="pt-4 flex gap-2">
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className={`flex-1 py-3.5 rounded-2xl font-black text-[10px] tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg ${
+                            isOutOfStock
+                              ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                              : remainingStock === 0
+                              ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30 cursor-not-allowed'
+                              : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                          }`}
+                          disabled={isOutOfStock || remainingStock === 0}
+                        >
+                          {isOutOfStock ? (
+                            <>
+                              <AlertCircle size={16} /> AGOTADO
+                            </>
+                          ) : remainingStock === 0 ? (
+                            <>
+                              <AlertCircle size={16} /> EN CARRITO
+                            </>
+                          ) : (
+                            <>
+                              <Plus size={16} /> AGREGAR
+                            </>
+                          )}
+                        </button>
+                        <button 
+                          className="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl transition-colors active:scale-95 border border-slate-700/50"
+                          disabled={isOutOfStock}
+                        >
+                          <Info size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
