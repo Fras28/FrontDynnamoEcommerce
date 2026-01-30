@@ -12,10 +12,12 @@ import UserView from './components/user/UserView';
 import CartDrawer from './components/cart/CartDrawer';
 import PaymentSuccess from './components/cart/PaymentSuccess';
 
+
 import bgFungi from "./assets/bg-fungi.webp"
 import Logo from "./assets/FungiLovers.png"
 import VersionBadge from './components/comon/VersionBadge';
 import { VERSION_INFO } from '@/utils/version';
+import ProductDetail from './components/product/Productdetail';
 
 // Esto se verá cada vez que recargues la página en la consola
 console.log(
@@ -182,6 +184,18 @@ function App() {
                 ) : (
                   <UserView />
                 )}
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ NUEVA RUTA: Product Detail */}
+        <Route
+          path="/product/:id"
+          element={
+            <PrivateRoute>
+              <Layout response={globalResponse}>
+                <ProductDetail />
               </Layout>
             </PrivateRoute>
           }

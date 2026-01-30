@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Loader2, Store, ShoppingBag, Plus, Info, Tag, Filter, AlertCircle, CheckCircle } from 'lucide-react';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
@@ -8,6 +9,7 @@ import { notifications } from '@mantine/notifications';
 import UserOrders from './UserOrders';
 
 const UserView = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'shop' | 'orders'>('shop');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   
@@ -311,10 +313,11 @@ const UserView = () => {
                           )}
                         </button>
                         <button 
-                          className="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl transition-colors active:scale-95 border border-slate-700/50"
-                          disabled={isOutOfStock}
+                          onClick={() => navigate(`/product/${product.id}`)}
+                          className="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl transition-all active:scale-95 border border-slate-700/50 group/btn"
+                          title="Ver detalles"
                         >
-                          <Info size={18} />
+                          <Info size={18} className="group-hover/btn:text-indigo-400 transition-colors" />
                         </button>
                       </div>
                     </div>
