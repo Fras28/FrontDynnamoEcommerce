@@ -7,7 +7,7 @@ import LandingPage from './components/landing/Landingpage';
 import { Role } from './types';
 import { useAuthStore } from './store/authStore';
 import { useCartStore } from './store/cartStore';
-import AdminDashboard from './components/admin/AdminDashboard';
+// import AdminDashboard from './components/admin/AdminDashboard';
 import UserView from './components/user/UserView';
 import CartDrawer from './components/cart/CartDrawer';
 import PaymentSuccess from './components/cart/PaymentSuccess';
@@ -19,6 +19,10 @@ import VersionBadge from './components/comon/VersionBadge';
 import { VERSION_INFO } from '@/utils/version';
 import ProductDetail from './components/product/Productdetail';
 import EmailConfirmation from './components/Auth/EmailConfirmation';
+import DemoDashboard from './components/admin/demo/Demodashboard';
+import { useInactiveProducts, useProducts } from './hooks/useProducts';
+import { useAdminOrders, useUpdateOrderStatus } from './hooks/useOrders';
+import { useCategories } from './hooks/useCategories';
 
 // Esto se verá cada vez que recargues la página en la consola
 console.log(
@@ -181,7 +185,14 @@ function App() {
             <PrivateRoute>
               <Layout response={globalResponse}>
                 {user?.role === Role.ADMIN ? (
-                  <AdminDashboard />
+                  // <AdminDashboard />
+                  <DemoDashboard
+  useProducts={useProducts}
+  useInactiveProducts={useInactiveProducts}
+  useAdminOrders={useAdminOrders}
+  useCategories={useCategories}
+  useUpdateOrderStatus={useUpdateOrderStatus}
+/>
                 ) : (
                   <UserView />
                 )}
