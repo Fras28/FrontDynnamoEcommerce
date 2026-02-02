@@ -62,31 +62,52 @@ const AuthForm: React.FC = () => {
       } else {
         // Registro exitoso - Mostrar notificación especial
         notifications.show({
-          title: '📧 ¡Registro Exitoso!',
+          title: '✅ ¡Registro Exitoso!',
           message: (
-            <div className="space-y-2">
-              <p className="font-semibold">¡Tu cuenta ha sido creada!</p>
-              <p className="text-sm">
-                Te hemos enviado un correo electrónico a{' '}
-                <span className="font-bold text-indigo-600">{(data as RegisterFormData).email}</span>
+            <div className="space-y-3">
+              <p className="font-semibold text-sm">
+                Tu cuenta ha sido creada exitosamente
               </p>
-              <p className="text-sm">
-                Por favor, revisa tu bandeja de entrada y confirma tu cuenta haciendo clic en el enlace de verificación.
-              </p>
-              <div className="mt-3 p-2 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                <p className="text-xs text-yellow-800 font-semibold">
-                  ⚠️ Importante: Si no recibes el correo en los próximos minutos:
+              
+              <div className="bg-indigo-50 border-l-4 border-indigo-500 p-3 rounded">
+                <p className="text-sm font-semibold text-indigo-900">
+                  📧 Revisa tu correo
                 </p>
-                <ul className="text-xs text-yellow-700 mt-1 ml-4 list-disc space-y-1">
-                  <li>Revisa tu carpeta de <strong>Spam</strong> o <strong>Correo no deseado</strong></li>
-                  <li>Verifica que el email sea correcto</li>
-                  <li>Agrega nuestro email a tus contactos para futuros envíos</li>
-                </ul>
+                <p className="text-xs text-indigo-800 mt-1">
+                  Email: <strong>{(data as RegisterFormData).email}</strong>
+                </p>
+                <p className="text-xs text-indigo-700 mt-1">
+                  Haz clic en el enlace para activar tu cuenta
+                </p>
               </div>
+        
+              <div className="bg-amber-50 border-l-4 border-amber-400 p-3 rounded">
+                <p className="text-xs font-semibold text-amber-900 mb-2">
+                  ⚠️ ¿No ves el correo? Sigue estos pasos:
+                </p>
+                <ol className="text-xs text-amber-800 space-y-1 ml-4 list-decimal">
+                  <li>
+                    <strong>Revisa tu carpeta de Spam/Correo no deseado</strong>
+                  </li>
+                  <li>
+                    Busca emails de: <code className="bg-amber-100 px-1 rounded text-[10px]">onboarding@resend.dev</code>
+                  </li>
+                  <li>
+                    Si lo encuentras, márcalo como <strong>"No es spam"</strong>
+                  </li>
+                  <li>
+                    Espera 1-2 minutos (puede tardar un poco)
+                  </li>
+                </ol>
+              </div>
+        
+              <p className="text-xs text-gray-600 text-center mt-2">
+                💡 Agrega nuestro email a tus contactos para futuros envíos
+              </p>
             </div>
           ),
           color: 'green',
-          autoClose: 12000, // Se cierra automáticamente después de 12 segundos
+          autoClose: 15000,
           withCloseButton: true,
         });
 

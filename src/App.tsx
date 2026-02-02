@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import {  ShoppingCart as CartIcon, LogOut } from 'lucide-react';
+import { ShoppingCart as CartIcon, LogOut } from 'lucide-react';
 
 import AuthForm from './components/Auth/AuthForm';
 import LandingPage from './components/landing/Landingpage';
@@ -18,10 +18,11 @@ import Logo from "./assets/FungiLovers.png"
 import VersionBadge from './components/comon/VersionBadge';
 import { VERSION_INFO } from '@/utils/version';
 import ProductDetail from './components/product/Productdetail';
+import EmailConfirmation from './components/Auth/EmailConfirmation';
 
 // Esto se verá cada vez que recargues la página en la consola
 console.log(
-  `%c🚀 ${VERSION_INFO.name} v${VERSION_INFO.version} | ${VERSION_INFO.environment}`, 
+  `%c🚀 ${VERSION_INFO.name} v${VERSION_INFO.version} | ${VERSION_INFO.environment}`,
   "color: #0fe778; font-weight: bold; font-size: 12px;"
 );
 // Response type para el footer de logs
@@ -68,8 +69,8 @@ const Layout = ({ children, response }: LayoutProps) => {
                     {user.email}
                   </span>
                   <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest border ${user.role === Role.ADMIN
-                      ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                      : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
+                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                    : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
                     }`}>
                     {user.role}
                   </span>
@@ -188,7 +189,11 @@ function App() {
             </PrivateRoute>
           }
         />
-
+        {/* ✅ NUEVA RUTA: Confirmación de Email */}
+        <Route
+          path="/auth/confirm-email"
+          element={<EmailConfirmation />}
+        />
         {/* ✅ NUEVA RUTA: Product Detail */}
         <Route
           path="/product/:id"
