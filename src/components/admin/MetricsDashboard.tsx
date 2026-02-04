@@ -130,24 +130,25 @@ const MetricsDashboard = () => {
         </div>
       </div>
 
-      {/* Sales Metrics by Period */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6">
-        <div className="flex items-center justify-between mb-6">
+      {/* Sales Metrics by Period - OPTIMIZADO PARA MOBILE */}
+      <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h3 className="text-lg font-black text-white uppercase tracking-tight">
             Ventas por Período
           </h3>
-          <div className="flex gap-2">
+          {/* Botones optimizados para mobile */}
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
             {(['daily', 'weekly', 'monthly', 'yearly'] as const).map((period) => (
               <button
                 key={period}
                 onClick={() => setSalesPeriod(period)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${
                   salesPeriod === period
                     ? 'bg-indigo-600 text-white'
                     : 'bg-slate-800 text-slate-400 hover:text-white'
                 }`}
               >
-                {period === 'daily' ? 'Hoy' : period === 'weekly' ? 'Semana' : period === 'monthly' ? 'Mes' : 'Año'}
+                {period === 'daily' ? 'Hoy' : period === 'weekly' ? 'Sem' : period === 'monthly' ? 'Mes' : 'Año'}
               </button>
             ))}
           </div>
@@ -194,18 +195,22 @@ const MetricsDashboard = () => {
         )}
       </div>
 
-      {/* Revenue Chart */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-black text-white uppercase tracking-tight">
-            Evolución de Ventas
-          </h3>
-          <div className="flex gap-2">
+      {/* Revenue Evolution Chart - OPTIMIZADO PARA MOBILE */}
+      <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="text-indigo-400" size={20} />
+            <h3 className="text-lg font-black text-white uppercase tracking-tight">
+              Evolución de Ventas
+            </h3>
+          </div>
+          {/* Botones optimizados para mobile */}
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
             {(['daily', 'weekly', 'monthly'] as const).map((period) => (
               <button
                 key={period}
                 onClick={() => setChartPeriod(period)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${
                   chartPeriod === period
                     ? 'bg-indigo-600 text-white'
                     : 'bg-slate-800 text-slate-400 hover:text-white'
@@ -231,6 +236,14 @@ const MetricsDashboard = () => {
                   border: '1px solid #1e293b',
                   borderRadius: '12px',
                   fontSize: '12px',
+                  color: '#f1f5f9',
+                }}
+                itemStyle={{
+                  color: '#f1f5f9',
+                }}
+                labelStyle={{
+                  color: '#f1f5f9',
+                  fontWeight: 'bold',
                 }}
               />
               <Legend />

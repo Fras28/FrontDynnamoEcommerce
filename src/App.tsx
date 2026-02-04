@@ -47,12 +47,26 @@ const Layout = ({ children, response }: LayoutProps) => {
 
   return (
     <div
-      className="min-h-screen text-slate-200 p-4 md:p-8 font-sans selection:bg-indigo-500/30 bg-cover bg-center bg-fixed bg-no-repeat"
+      className="min-h-screen text-slate-200 p-4 md:p-8 font-sans selection:bg-indigo-500/30 bg-cover bg-center bg-fixed bg-no-repeat relative"
       style={{
-        backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})`
+        backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
       }}
     >
-      <div className="max-w-6xl mx-auto space-y-8">
+      {/* Overlay adicional para asegurar cobertura completa */}
+      <div 
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+        }}
+      />
+      
+      <div className="max-w-6xl mx-auto space-y-8 relative z-0">
         {/* Navbar */}
         <nav className="flex justify-between items-center bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem] backdrop-blur-xl shadow-2xl">
           <div className="flex items-center gap-0">
