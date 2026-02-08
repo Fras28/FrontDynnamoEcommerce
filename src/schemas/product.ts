@@ -17,12 +17,12 @@ export const productSchema = z.object({
     .number({ invalid_type_error: 'El stock debe ser un número' })
     .int('El stock debe ser un número entero')
     .min(0, 'El stock no puede ser negativo'),
-  imageUrl: z
-    .string()
-    .url('Debe ser una URL válida')
-    .optional()
-    .or(z.literal('')),
   categoryId: z.number().int().positive().optional(), 
+  // ✅ CORREGIDO: Array de URLs para múltiples imágenes
+  images: z
+    .array(z.string().url('Cada imagen debe ser una URL válida'))
+    .min(1, 'Debes subir al menos una imagen')
+    .max(10, 'Máximo 10 imágenes permitidas'),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;

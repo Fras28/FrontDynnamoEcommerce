@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Minus, Plus, Trash2, ShoppingBag, Loader2, Tag, AlertTriangle } from 'lucide-react';
+import { X, Minus, Plus, Trash2, ShoppingBag, Loader2, AlertTriangle, ImageOff } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { ordersApi, paymentsApi } from '../../api/endpoints';
 import { notifications } from '@mantine/notifications';
@@ -14,7 +14,7 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  // ✅ NUEVO: Verificar si hay problemas de stock en el carrito
+  // ✅ Verificar si hay problemas de stock en el carrito
   const getStockIssues = () => {
     return cart.filter(item => item.quantity > item.stock);
   };
@@ -32,7 +32,7 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
       return;
     }
 
-    // ✅ NUEVO: Validar stock antes de proceder
+    // ✅ Validar stock antes de proceder
     if (hasStockIssues) {
       notifications.show({
         title: 'Stock insuficiente',
@@ -77,7 +77,7 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
     } catch (error: any) {
       console.error('Checkout error:', error);
       
-      // ✅ NUEVO: Manejo mejorado de errores de stock
+      // ✅ Manejo mejorado de errores de stock
       if (error.response?.status === 400 && error.response?.data?.message?.includes('Stock insuficiente')) {
         notifications.show({
           title: 'Stock insuficiente',
@@ -129,7 +129,7 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
           </button>
         </div>
 
-        {/* ✅ NUEVO: Alerta de stock insuficiente */}
+        {/* ✅ Alerta de stock insuficiente */}
         {hasStockIssues && (
           <div className="mx-6 mt-4 bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-start gap-3 animate-in slide-in-from-top duration-300">
             <AlertTriangle className="text-red-400 flex-shrink-0 mt-0.5" size={20} />
@@ -158,6 +158,18 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
               const isLowStock = item.stock <= 5 && item.stock > 0;
               const isOutOfStock = item.stock === 0;
 
+              // ✅ CORREGIDO: Obtener la imagen del producto con múltiples estrategias
+              const getProductImage = () => {
+                // Estrategia 1: Nueva estructura con array de imágenes
+                if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+                  return item.images[0].url;
+                }              
+                // Estrategia 3: null para mostrar placeholder
+                return null;
+              };
+
+              const productImage = getProductImage();
+
               return (
                 <div
                   key={item.id}
@@ -169,16 +181,29 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
                 >
                   <div className="flex gap-4">
                     <div className="w-20 h-20 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 flex-shrink-0 relative">
-                      {item.imageUrl ? (
+                      {/* ✅ CORREGIDO: Mostrar imagen o placeholder */}
+                      {productImage ? (
                         <img
-                          src={item.imageUrl}
+                          src={productImage}
                           alt={item.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Si falla la carga, mostrar icono
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent && !parent.querySelector('.fallback-icon')) {
+                              const icon = document.createElement('div');
+                              icon.className = 'fallback-icon flex items-center justify-center w-full h-full';
+                              icon.innerHTML = '<svg class="text-slate-600" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+                              parent.appendChild(icon);
+                            }
+                          }}
                         />
                       ) : (
-                        <Tag size={24} className="text-slate-700" />
+                        <ImageOff size={24} className="text-slate-600" />
                       )}
-                      {/* ✅ NUEVO: Badge de stock agotado */}
+                      
+                      {/* ✅ Badge de stock agotado */}
                       {isOutOfStock && (
                         <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
                           <span className="text-[8px] font-black text-red-400 uppercase tracking-wider">
@@ -194,7 +219,7 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
                         ${Number(item.price).toFixed(2)}
                       </p>
 
-                      {/* ✅ NUEVO: Indicadores de stock */}
+                      {/* ✅ Indicadores de stock */}
                       <div className="flex items-center gap-2 mt-2">
                         {isOverStock && (
                           <span className="text-[9px] font-black text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20 flex items-center gap-1">
@@ -235,7 +260,7 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
                           </span>
                           <button
                             onClick={() => {
-                              // ✅ NUEVO: Validar antes de aumentar
+                              // ✅ Validar antes de aumentar
                               if (item.quantity >= item.stock) {
                                 notifications.show({
                                   title: 'Stock insuficiente',
@@ -300,7 +325,7 @@ const CartDrawer = ({ onOrderSuccess }: CartDrawerProps) => {
               )}
             </button>
 
-            {/* ✅ NUEVO: Mensaje adicional si hay problemas de stock */}
+            {/* ✅ Mensaje adicional si hay problemas de stock */}
             {hasStockIssues && (
               <p className="text-center text-xs text-red-400/80 font-medium">
                 Reduce las cantidades de los productos marcados para continuar

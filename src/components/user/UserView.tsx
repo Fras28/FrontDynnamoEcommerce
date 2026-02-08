@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Store, ShoppingBag, Plus, Info, Tag, Filter, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, Store, ShoppingBag, Plus, Info, Tag, Filter, AlertCircle, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
 import { useCartStore } from '../../store/cartStore';
 import { Product } from '../../types';
 import { notifications } from '@mantine/notifications';
 import UserOrders from './UserOrders';
+import ProductImage from '../product/ProductImage';
+
 
 const UserView = () => {
   const navigate = useNavigate();
@@ -18,7 +20,6 @@ const UserView = () => {
   const { addToCart, cart } = useCartStore();
 
   const handleAddToCart = (product: Product) => {
-    // ✅ NUEVO: Verificar stock disponible
     if (product.stock === 0) {
       notifications.show({
         title: 'Producto agotado',
@@ -30,7 +31,6 @@ const UserView = () => {
       return;
     }
 
-    // ✅ NUEVO: Verificar si ya está en el carrito y el límite de stock
     const itemInCart = cart.find(item => item.id === product.id);
     if (itemInCart) {
       const newQuantity = itemInCart.quantity + 1;
@@ -46,10 +46,8 @@ const UserView = () => {
       }
     }
 
-    // Agregar al carrito
     addToCart(product, 1);
     
-    // ✅ NUEVO: Notificación de éxito mejorada
     notifications.show({
       title: 'Producto agregado',
       message: `"${product.name}" se agregó al carrito`,
@@ -59,7 +57,6 @@ const UserView = () => {
     });
   };
 
-  // Filtrar productos por categoría seleccionada
   const filteredProducts = selectedCategory
     ? products?.filter(p => p.categoryId === selectedCategory)
     : products;
@@ -76,7 +73,7 @@ const UserView = () => {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
-      {/* Selector de Pestañas (Navegación Mi Perfil) */}
+      {/* Selector de Pestañas */}
       <div className="flex p-1 bg-slate-900 border border-slate-800 rounded-2xl w-fit mx-auto md:mx-0 shadow-2xl">
         <button
           onClick={() => setActiveTab('shop')}
@@ -113,7 +110,7 @@ const UserView = () => {
               </p>
             </div>
 
-            {/* ✅ Filtros de Categoría */}
+            {/* Filtros de Categoría */}
             <div className="flex flex-col gap-2 min-w-[250px]">
               <div className="flex items-center gap-2 text-slate-400 text-xs font-black uppercase tracking-wider">
                 <Filter size={14} />
@@ -167,7 +164,7 @@ const UserView = () => {
               </p>
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="ml-auto text-xs text-slate-400 hover:text-white font-black uppercase tracking-widest"
+                className="ml-auto text-xs text-slate-400 hover:text-white transition-colors font-bold"
               >
                 Limpiar filtro
               </button>
@@ -184,11 +181,21 @@ const UserView = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts?.map((product: Product) => {
+              {filteredProducts?.map((product: Product, index: number) => {
                 const isLowStock = product.stock <= 5 && product.stock > 0;
                 const isOutOfStock = product.stock === 0;
                 const itemInCart = cart.find(item => item.id === product.id);
                 const remainingStock = product.stock - (itemInCart?.quantity || 0);
+
+                // Obtener la primera imagen o usar placeholder
+                const primaryImage = product.images && product.images.length > 0
+                  ? product.images[0].url
+                  : 'https://placehold.co/600x600/1e293b/4f46e5?text=Sin+Imagen';
+                
+                const additionalImagesCount = product.images ? product.images.length - 1 : 0;
+
+                // ✅ OPTIMIZACIÓN: Primeros 6 productos sin lazy loading (above the fold)
+                const isPriority = index < 6;
 
                 return (
                   <div
@@ -199,17 +206,30 @@ const UserView = () => {
                         : 'border-slate-800 hover:border-indigo-500/50 hover:shadow-indigo-500/10'
                     }`}
                   >
-                    {/* Imagen del Producto */}
-                    <div className="relative aspect-square mb-6 overflow-hidden rounded-[2rem] bg-slate-950 border border-slate-800/50">
-                      <img
-                        src={product.imageUrl || '/placeholder.png'}
+                    {/* Imagen del Producto con Lazy Loading */}
+                    <div className="relative mb-6 overflow-hidden rounded-[2rem]">
+                      {/* ✅ OPTIMIZADO: Usar ProductImage con lazy loading */}
+                      <ProductImage
+                        src={primaryImage}
                         alt={product.name}
-                        className={`w-full h-full object-cover transition-transform duration-700 ${
+                        priority={isPriority}
+                        aspectRatio="square"
+                        className={`transition-transform duration-700 ${
                           !isOutOfStock && 'group-hover:scale-110'
                         }`}
                       />
                       
-                      {/* ✅ NUEVO: Badges de estado de stock */}
+                      {/* Badge de múltiples imágenes */}
+                      {additionalImagesCount > 0 && (
+                        <div className="absolute bottom-4 right-4">
+                          <span className="bg-slate-950/90 backdrop-blur-md text-slate-300 text-[9px] font-black px-2.5 py-1.5 rounded-full border border-slate-700/50 flex items-center gap-1">
+                            <ImageIcon size={10} />
+                            +{additionalImagesCount}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Badges de estado de stock */}
                       <div className="absolute top-4 left-4 flex flex-col gap-2">
                         {isOutOfStock ? (
                           <span className="bg-red-950/90 backdrop-blur-md text-red-400 text-[10px] font-black px-3 py-1.5 rounded-full border border-red-500/30 flex items-center gap-1">
@@ -225,7 +245,6 @@ const UserView = () => {
                           </span>
                         )}
                         
-                        {/* Mostrar unidades en carrito */}
                         {itemInCart && itemInCart.quantity > 0 && (
                           <span className="bg-indigo-950/90 backdrop-blur-md text-indigo-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-indigo-500/30">
                             {itemInCart.quantity} en carrito
@@ -233,7 +252,6 @@ const UserView = () => {
                         )}
                       </div>
 
-                      {/* Mostrar categoría del producto */}
                       {product.category && (
                         <div className="absolute top-4 right-4">
                           <span className="bg-purple-950/80 backdrop-blur-md text-purple-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-purple-500/30">
@@ -242,7 +260,6 @@ const UserView = () => {
                         </div>
                       )}
 
-                      {/* ✅ NUEVO: Overlay cuando está agotado */}
                       {isOutOfStock && (
                         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
                           <span className="bg-red-500/20 text-red-400 px-6 py-3 rounded-2xl font-black text-sm border border-red-500/30">
@@ -271,7 +288,6 @@ const UserView = () => {
                         {product.description || 'Sin descripción detallada disponible.'}
                       </p>
 
-                      {/* ✅ NUEVO: Indicador de stock restante */}
                       {!isOutOfStock && itemInCart && (
                         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-2">
                           <p className="text-[10px] text-slate-400 font-bold">
@@ -328,7 +344,6 @@ const UserView = () => {
           )}
         </>
       ) : (
-        /* Sección de Mis Pedidos */
         <div className="max-w-4xl">
           <UserOrders />
         </div>

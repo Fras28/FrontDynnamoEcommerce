@@ -14,7 +14,7 @@ import PaymentSuccess from './components/cart/PaymentSuccess';
 
 
 import bgFungi from "./assets/bg-fungi.webp"
-import Logo from "./assets/FungiLovers.png"
+import Logo from "./assets/alquemystic.jpg"
 import VersionBadge from './components/comon/VersionBadge';
 import { VERSION_INFO } from '@/utils/version';
 import ProductDetail from './components/product/Productdetail';
@@ -69,17 +69,17 @@ const Layout = ({ children, response }: LayoutProps) => {
       <div className="max-w-6xl mx-auto space-y-8 relative z-0">
         {/* Navbar */}
         <nav className="flex justify-between items-center bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem] backdrop-blur-xl shadow-2xl">
-          <div className="flex items-center gap-0">
+          <div className="flex items-center gap-2">
 
             <img
               src={Logo}
-              alt="FungiLovers"
+              alt="Alquimystic"
               className="w-[50px] md:w-[100px] h-auto object-contain"
             />
 
             <div>
-              <h1 className=" font-black italic tracking-tighter text-white uppercase leading-none">
-                FungiLovers <span className="text-indigo-500"> Store</span>
+              <h1 className=" font-black  tracking-tighter text-white uppercase leading-none">
+              Alquimystic 
               </h1>
               {user && (
                 <div className="flex items-center gap-2 mt-1">

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ShoppingBag, ArrowRight, CheckCircle, Sparkles, Leaf, Heart, Brain, Shield, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import bgFungi from "../../assets/bg-fungi.webp";
-import Logo from "../../assets/FungiLovers.png"
+import Logo from "../../assets/alquemystic.jpg"
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -140,7 +140,7 @@ const LandingPage = () => {
               <img src={Logo} alt="LogoFungi" className='w-20'/>
               <div>
                 <h1 className="text-lg md:text-2xl font-black italic tracking-tighter text-white uppercase leading-none">
-                  FungiLovers
+                Alquimystic
                 </h1>
                 <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">
                   Fermentos & Fungis
@@ -323,7 +323,7 @@ const LandingPage = () => {
           <div className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 border border-indigo-500/20 rounded-3xl p-12">
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-black uppercase italic mb-4">
-                ¿Por qué <span className="text-indigo-400">FungiLovers?</span>
+                ¿Por qué <span className="text-indigo-400">Alquimystic?</span>
               </h2>
             </div>
 
@@ -389,7 +389,7 @@ const LandingPage = () => {
                 <ShoppingBag className="text-white" size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-black uppercase">FungiLoversi</h3>
+                <h3 className="text-lg font-black uppercase">Alquimystic</h3>
                 <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">
                   Fermentos & Fungis
                 </p>

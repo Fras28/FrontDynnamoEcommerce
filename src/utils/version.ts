@@ -9,7 +9,7 @@ export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
 /**
  * Obtiene el nombre de la aplicación
  */
-export const APP_NAME = 'FungiLovers Store';
+export const APP_NAME = 'Alquimystic Store';
 
 /**
  * Información completa de la versión
