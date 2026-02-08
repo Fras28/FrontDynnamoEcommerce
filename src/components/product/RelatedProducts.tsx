@@ -6,6 +6,7 @@ import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
 import { notifications } from '@mantine/notifications';
 import { useRef } from 'react';
+import { generateProductUrl } from '../../utils/urlUtils';
 
 interface RelatedProductsProps {
   currentProductId: number;
@@ -68,7 +69,7 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
-      const scrollAmount = 320; // Ancho de una card + gap
+      const scrollAmount = 280; // Ancho de una card + gap (ajustado para mobile)
       const newScrollLeft = scrollContainerRef.current.scrollLeft + 
         (direction === 'left' ? -scrollAmount : scrollAmount);
       
@@ -81,7 +82,7 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
         <div className="flex items-center justify-center py-10">
           <div className="relative w-12 h-12">
             <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
@@ -97,21 +98,21 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16 border-t border-slate-800 mt-12">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-12 lg:py-16 border-t border-slate-800 mt-8 sm:mt-12 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-            <Tag className="text-indigo-500" size={28} />
-            Más en <span className="text-indigo-400">{categoryName || 'esta categoría'}</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Tag className="text-indigo-500 flex-shrink-0" size={20} />
+            <span className="break-words">Más en <span className="text-indigo-400">{categoryName || 'esta categoría'}</span></span>
           </h2>
-          <p className="text-slate-500 text-sm mt-2">
+          <p className="text-slate-500 text-xs sm:text-sm mt-2">
             Descubre otros productos que podrían interesarte
           </p>
         </div>
 
-        {/* Controles de navegación */}
-        <div className="hidden md:flex gap-2">
+        {/* Controles de navegación - solo en desktop */}
+        <div className="hidden md:flex gap-2 flex-shrink-0">
           <button
             onClick={() => scroll('left')}
             className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 hover:border-indigo-500/50 text-slate-400 hover:text-white flex items-center justify-center transition-all"
@@ -127,12 +128,17 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
         </div>
       </div>
 
-      {/* Carousel */}
-      <div className="relative group">
+      {/* Carousel - Optimizado para mobile */}
+      <div className="relative group w-full">
+        {/* Scroll container con padding lateral en mobile para efecto peek */}
         <div 
           ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth pb-4"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth pb-4 snap-x snap-mandatory -mx-3 px-3 sm:mx-0 sm:px-0"
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
           {relatedProducts.map((product) => {
             const isLowStock = product.stock <= 5 && product.stock > 0;
@@ -148,32 +154,33 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
             return (
               <div
                 key={product.id}
-                className="group/card flex-shrink-0 w-[280px] bg-slate-900 border border-slate-800 rounded-[2rem] p-4 transition-all duration-500 hover:shadow-2xl hover:border-indigo-500/50 hover:shadow-indigo-500/10 flex flex-col"
+                className="group/card flex-shrink-0 w-[240px] sm:w-[280px] bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-[2rem] p-3 sm:p-4 transition-all duration-500 hover:shadow-2xl hover:border-indigo-500/50 hover:shadow-indigo-500/10 flex flex-col snap-start"
               >
                 {/* Imagen */}
-                <div 
-                  className="relative aspect-square mb-4 overflow-hidden rounded-[1.5rem] bg-slate-950 border border-slate-800/50 cursor-pointer"
-                  onClick={() => navigate(`/product/${product.id}`)}
+                <div
+                  className="relative aspect-square mb-3 sm:mb-4 overflow-hidden rounded-xl sm:rounded-[1.5rem] bg-slate-950 border border-slate-800/50 cursor-pointer"
+                  onClick={() => navigate(generateProductUrl(product.id, product.name))}
                 >
                   <img
                     src={primaryImage}
                     alt={product.name}
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110"
                   />
                   
                   {/* Badges de estado */}
-                  <div className="absolute top-3 left-3 flex flex-col gap-2">
+                  <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1.5 sm:gap-2">
                     {isOutOfStock ? (
-                      <span className="bg-red-950/90 backdrop-blur-md text-red-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-red-500/30 flex items-center gap-1">
-                        <AlertCircle size={8} /> SIN STOCK
+                      <span className="bg-red-950/90 backdrop-blur-md text-red-400 text-[8px] sm:text-[9px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-red-500/30 flex items-center gap-1">
+                        <AlertCircle size={7} className="sm:w-2 sm:h-2" /> SIN STOCK
                       </span>
                     ) : isLowStock ? (
-                      <span className="bg-amber-950/90 backdrop-blur-md text-amber-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-amber-500/30 flex items-center gap-1">
-                        <AlertCircle size={8} /> ¡ÚLTIMAS {product.stock}!
+                      <span className="bg-amber-950/90 backdrop-blur-md text-amber-400 text-[8px] sm:text-[9px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-amber-500/30 flex items-center gap-1">
+                        <AlertCircle size={7} className="sm:w-2 sm:h-2" /> ¡ÚLTIMAS {product.stock}!
                       </span>
                     ) : (
-                      <span className="bg-emerald-950/90 backdrop-blur-md text-emerald-400 text-[9px] font-black px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
-                        <CheckCircle size={8} /> DISPONIBLE
+                      <span className="bg-emerald-950/90 backdrop-blur-md text-emerald-400 text-[8px] sm:text-[9px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                        <CheckCircle size={7} className="sm:w-2 sm:h-2" /> DISPONIBLE
                       </span>
                     )}
                   </div>
@@ -181,7 +188,7 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
                   {/* Overlay cuando está agotado */}
                   {isOutOfStock && (
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
-                      <span className="bg-red-500/20 text-red-400 px-4 py-2 rounded-xl font-black text-xs border border-red-500/30">
+                      <span className="bg-red-500/20 text-red-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-black text-[10px] sm:text-xs border border-red-500/30">
                         AGOTADO
                       </span>
                     </div>
@@ -189,27 +196,27 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
                 </div>
 
                 {/* Info */}
-                <div className="px-2 space-y-3 flex-1 flex flex-col">
-                  <div className="flex-1">
+                <div className="px-1 sm:px-2 space-y-2 sm:space-y-3 flex-1 flex flex-col">
+                  <div className="flex-1 min-h-0">
                     <h3 
-                      className="text-base font-bold text-white group-hover/card:text-indigo-400 transition-colors line-clamp-2 cursor-pointer mb-2 leading-tight"
-                      onClick={() => navigate(`/product/${product.id}`)}
+                      className="text-sm sm:text-base font-bold text-white group-hover/card:text-indigo-400 transition-colors line-clamp-2 cursor-pointer mb-1.5 sm:mb-2 leading-tight break-words"
+                      onClick={() => navigate(generateProductUrl(product.id, product.name))}
                     >
                       {product.name}
                     </h3>
                     
-                    <p className="text-slate-400 text-xs line-clamp-2 leading-relaxed mb-3">
+                    <p className="text-slate-400 text-[11px] sm:text-xs line-clamp-2 leading-relaxed mb-2 sm:mb-3 break-words">
                       {product.description || 'Sin descripción disponible.'}
                     </p>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-2xl font-black text-indigo-400">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xl sm:text-2xl font-black text-indigo-400 whitespace-nowrap">
                         ${Number(product.price).toLocaleString()}
                       </p>
                       {itemInCart && (
-                        <span className="text-[9px] font-black text-indigo-400 bg-indigo-950/50 px-2 py-1 rounded-full border border-indigo-500/30">
+                        <span className="text-[8px] sm:text-[9px] font-black text-indigo-400 bg-indigo-950/50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-indigo-500/30 whitespace-nowrap">
                           {itemInCart.quantity} en carrito
                         </span>
                       )}
@@ -219,7 +226,7 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={isOutOfStock || remainingStock === 0}
-                        className={`flex-1 py-3 rounded-xl font-black text-[10px] tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 ${
+                        className={`flex-1 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-black text-[9px] sm:text-[10px] tracking-wider sm:tracking-widest transition-all flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 ${
                           isOutOfStock
                             ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                             : remainingStock === 0
@@ -229,22 +236,22 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
                       >
                         {isOutOfStock ? (
                           <>
-                            <AlertCircle size={14} /> AGOTADO
+                            <AlertCircle size={12} className="sm:w-3.5 sm:h-3.5" /> AGOTADO
                           </>
                         ) : remainingStock === 0 ? (
                           <>
-                            <AlertCircle size={14} /> EN CARRITO
+                            <AlertCircle size={12} className="sm:w-3.5 sm:h-3.5" /> EN CARRITO
                           </>
                         ) : (
                           <>
-                            <Plus size={14} /> AGREGAR
+                            <Plus size={12} className="sm:w-3.5 sm:h-3.5" /> AGREGAR
                           </>
                         )}
                       </button>
                       
                       <button 
-                        onClick={() => navigate(`/product/${product.id}`)}
-                        className="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-all active:scale-95 border border-slate-700/50 font-black text-[10px]"
+                        onClick={() => navigate(generateProductUrl(product.id, product.name))}
+                        className="px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg sm:rounded-xl transition-all active:scale-95 border border-slate-700/50 font-black text-[9px] sm:text-[10px] whitespace-nowrap"
                       >
                         VER
                       </button>
@@ -256,9 +263,9 @@ const RelatedProducts = ({ currentProductId, categoryId, categoryName }: Related
           })}
         </div>
 
-        {/* Fade edges para indicar scroll */}
-        <div className="absolute top-0 left-0 bottom-0 w-8 bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
+        {/* Fade edges - solo en desktop */}
+        <div className="hidden sm:block absolute top-0 left-0 bottom-0 w-8 bg-gradient-to-r from-slate-950 to-transparent pointer-events-none" />
+        <div className="hidden sm:block absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-slate-950 to-transparent pointer-events-none" />
       </div>
     </div>
   );
