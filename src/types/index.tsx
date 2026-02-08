@@ -60,30 +60,42 @@ export interface CreateCategoryDto {
 
 export interface UpdateCategoryDto extends Partial<CreateCategoryDto> {}
 
-// Product Types
+// ✅ CORREGIDO: Tipo para las imágenes del producto
+export interface ProductImage {
+  id: number;
+  url: string;
+  productId: number;
+  isPrimary?: boolean;
+  order?: number;
+  createdAt?: string;
+}
+
+// ✅ CORREGIDO: Product con imágenes múltiples
 export interface Product {
   id: number;
   name: string;
-  description?: string;
-  price: number;
+  description?: string | null;
+  price: number | string;
   stock: number;
-  imageUrl?: string;
-  categoryId?: number;
-  category?: Category;
   isActive: boolean;
+  categoryId?: number | null;
+  category?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
+  images: ProductImage[]; // ✅ Array de objetos con id, url, etc.
   createdAt: string;
   updatedAt: string;
-  _count?: {
-    items: number;
-  };
 }
 
+// ✅ CORREGIDO: DTOs para crear/actualizar productos
 export interface CreateProductDto {
   name: string;
   description?: string;
   price: number;
   stock: number;
-  imageUrl?: string;
+  images: string[]; // ✅ Array de URLs
   categoryId?: number;
 }
 
@@ -118,7 +130,7 @@ export interface Order {
   }[];
 }
 
-// ✅ TIPOS DE MÉTRICAS - NUEVOS
+// ✅ TIPOS DE MÉTRICAS
 export interface DashboardMetrics {
   totalRevenue: number;
   totalOrders: number;

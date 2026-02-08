@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Edit3, Trash2, Tag, DollarSign, RefreshCw } from 'lucide-react';
+import { Edit3, Trash2, Tag, DollarSign, RefreshCw, Package } from 'lucide-react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,13 +11,13 @@ import {
 } from '@tanstack/react-table';
 
 import { modals } from '@mantine/modals';
-import { useDeleteProduct, useRestoreProduct } from '@/hooks/useProducts'; // ✅ Hook para reactivar incluido
+import { useDeleteProduct, useRestoreProduct } from '@/hooks/useProducts';
 import { Product } from '@/types';
 
 interface ProductsTableProps {
   products: Product[];
   onEdit: (product: Product) => void;
-  showInactive?: boolean; // ✅ Agrega esta línea para que TypeScript no de error
+  showInactive?: boolean;
 }
 
 const ProductsTable = ({ products, onEdit, showInactive = false }: ProductsTableProps) => {
@@ -29,7 +29,6 @@ const ProductsTable = ({ products, onEdit, showInactive = false }: ProductsTable
 
   const safeProducts = useMemo(() => (Array.isArray(products) ? products : []), [products]);
 
-  // Manejador para Reactivar productos desde la pestaña de Inactivos
   const handleRestore = (product: Product) => {
     modals.openConfirmModal({
       title: <span className="font-black uppercase italic text-emerald-500">Reactivar Producto</span>,
@@ -62,18 +61,32 @@ const ProductsTable = ({ products, onEdit, showInactive = false }: ProductsTable
   const columns = useMemo<ColumnDef<Product>[]>(
     () => [
       {
-        accessorKey: 'imageUrl',
+        accessorKey: 'images',
         header: 'Vista',
         cell: (info) => {
-          const url = info.getValue() as string;
+          const product = info.row.original;
+          // ✅ CORREGIDO: Obtener la primera imagen del array
+          const primaryImage = product.images?.[0]?.url;
           const fallback = 'https://placehold.co/100x100/1e293b/4f46e5?text=No+Img';
+          
           return (
-            <div className={`w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center ${showInactive ? 'grayscale opacity-50' : ''}`}>
-              <img 
-                src={url || fallback} 
-                className="w-full h-full object-cover" 
-                onError={(e) => (e.currentTarget.src = fallback)}
-              />
+            <div className={`relative w-14 h-14 rounded-xl bg-slate-800 border-2 border-slate-700 overflow-hidden flex items-center justify-center group ${showInactive ? 'grayscale opacity-50' : ''}`}>
+              {primaryImage ? (
+                <img 
+                  src={primaryImage} 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform" 
+                  onError={(e) => (e.currentTarget.src = fallback)}
+                  alt={product.name}
+                />
+              ) : (
+                <Package size={20} className="text-slate-600" />
+              )}
+              {/* Badge de cantidad de imágenes */}
+              {product.images && product.images.length > 1 && (
+                <div className="absolute bottom-1 right-1 bg-indigo-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
+                  +{product.images.length - 1}
+                </div>
+              )}
             </div>
           );
         },
@@ -86,11 +99,26 @@ const ProductsTable = ({ products, onEdit, showInactive = false }: ProductsTable
             <span className={`font-black italic uppercase text-sm ${showInactive ? 'text-slate-500 line-through' : 'text-white'}`}>
               {info.getValue() as string}
             </span>
-            <span className="text-[10px] text-slate-500 font-bold truncate max-w-[150px]">
+            <span className="text-[10px] text-slate-500 font-bold truncate max-w-[200px]">
               {info.row.original.description || 'SIN DESCRIPCIÓN'}
             </span>
           </div>
         ),
+      },
+      {
+        accessorKey: 'category',
+        header: 'Categoría',
+        cell: (info) => {
+          const category = info.getValue() as Product['category'];
+          return category ? (
+            <div className="flex items-center gap-2">
+              <Tag size={12} className="text-indigo-400" />
+              <span className="text-xs font-bold text-slate-400">{category.name}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-slate-600">Sin categoría</span>
+          );
+        },
       },
       {
         accessorKey: 'price',
@@ -103,24 +131,62 @@ const ProductsTable = ({ products, onEdit, showInactive = false }: ProductsTable
         ),
       },
       {
+        accessorKey: 'stock',
+        header: 'Stock',
+        cell: (info) => {
+          const stock = info.getValue() as number;
+          const isLowStock = stock > 0 && stock <= 5;
+          const isOutOfStock = stock === 0;
+          
+          return (
+            <div className="flex items-center gap-2">
+              <span className={`font-black text-sm ${
+                isOutOfStock ? 'text-red-500' : 
+                isLowStock ? 'text-amber-500' : 
+                'text-emerald-500'
+              }`}>
+                {stock}
+              </span>
+              {isLowStock && !isOutOfStock && (
+                <span className="text-[8px] bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full font-bold">
+                  BAJO
+                </span>
+              )}
+              {isOutOfStock && (
+                <span className="text-[8px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full font-bold">
+                  AGOTADO
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         id: 'actions',
         cell: (info) => (
           <div className="flex gap-2 justify-end">
             {showInactive ? (
-              // ✅ Botón de reactivación naranja para inactivos
               <button 
                 onClick={() => handleRestore(info.row.original)} 
                 className="p-2 bg-orange-500/10 hover:bg-orange-600 rounded-xl text-orange-500 hover:text-white transition-all group"
+                title="Reactivar producto"
               >
                 <RefreshCw size={16} className="group-hover:rotate-180 transition-transform duration-500" />
               </button>
             ) : (
-              // Botones normales para activos
               <>
-                <button onClick={() => onEdit(info.row.original)} className="p-2 bg-slate-800 hover:bg-indigo-600 rounded-xl text-slate-400 hover:text-white transition-colors">
+                <button 
+                  onClick={() => onEdit(info.row.original)} 
+                  className="p-2 bg-slate-800 hover:bg-indigo-600 rounded-xl text-slate-400 hover:text-white transition-colors"
+                  title="Editar producto"
+                >
                   <Edit3 size={16} />
                 </button>
-                <button onClick={() => handleDelete(info.row.original)} className="p-2 bg-slate-800 hover:bg-red-600 rounded-xl text-slate-400 hover:text-white transition-colors">
+                <button 
+                  onClick={() => handleDelete(info.row.original)} 
+                  className="p-2 bg-slate-800 hover:bg-red-600 rounded-xl text-slate-400 hover:text-white transition-colors"
+                  title="Eliminar producto"
+                >
                   <Trash2 size={16} />
                 </button>
               </>
@@ -166,7 +232,11 @@ const ProductsTable = ({ products, onEdit, showInactive = false }: ProductsTable
               {row.getVisibleCells().map((cell) => (
                 <div 
                   key={cell.id} 
-                  className={cell.column.id === 'imageUrl' ? '' : cell.column.id === 'actions' ? 'ml-auto' : 'flex-1 min-w-0'}
+                  className={
+                    cell.column.id === 'images' ? '' : 
+                    cell.column.id === 'actions' ? 'ml-auto' : 
+                    'flex-1 min-w-0'
+                  }
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </div>
@@ -175,6 +245,7 @@ const ProductsTable = ({ products, onEdit, showInactive = false }: ProductsTable
           ))
         ) : (
           <div className="py-20 text-center border border-dashed border-slate-800 rounded-3xl">
+            <Package size={48} className="mx-auto text-slate-800 mb-4" />
             <p className="text-xs font-black text-slate-600 uppercase tracking-widest">
               No se encontraron resultados
             </p>

@@ -128,7 +128,7 @@ const AdminDashboard = () => {
                 <BarChart3 className="text-indigo-500" size={20} />
                 <h3 className="text-xs font-black text-white uppercase tracking-widest">Control de Existencias</h3>
               </div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase italic">
+              <span className="text-[10px] font-bold text-slate-500 uppercase ">
                 {products?.length || 0} items activos
               </span>
             </div>

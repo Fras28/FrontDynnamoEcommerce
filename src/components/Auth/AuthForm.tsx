@@ -10,7 +10,7 @@ import { authApi } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
 import { notifications } from '@mantine/notifications';
 import { Role } from '../../types';
-import Logo from "../../assets/FungiLovers.png"
+import Logo from "../../assets/alquemystic.jpg"
 import { NavLink } from 'react-router-dom';
 
 const AuthForm: React.FC = () => {
