@@ -79,7 +79,7 @@
   width: 100%; /* Se mantiene, pero left/right son más fuertes */
   
   /* CLAVE: Fondo debe ser igual al fondo de la sección siguiente */
-  background: #2C9E90; 
+  background: #26262d; 
   
   height: 100px; 
   /* CLAVE: Reducimos el z-index para que el contenido de la sección quede por encima */
@@ -88,7 +88,7 @@
 
 .curved {
   position: relative;
-  background: #2C9E90;
+  background: #26262d;
  
   border-bottom-left-radius: 50% 20%;
   border-bottom-right-radius: 50% 20%;
