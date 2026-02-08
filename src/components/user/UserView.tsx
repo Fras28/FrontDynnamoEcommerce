@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2, Store, ShoppingBag, Plus, Info, Tag, Filter, AlertCircle, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Store, ShoppingBag, Plus, Info, Tag, Filter, AlertCircle, CheckCircle, Image as ImageIcon, Heart } from 'lucide-react';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
 import { useCartStore } from '../../store/cartStore';
@@ -9,12 +9,13 @@ import { notifications } from '@mantine/notifications';
 import UserOrders from './UserOrders';
 import ProductImage from '../product/ProductImage';
 import { generateProductUrl, generateSlug } from '../../utils/urlUtils';
+import UserFavorites from './UserFavorites';
 
 
 const UserView = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'shop' | 'orders'>('shop');
+  const [activeTab, setActiveTab] = useState<'shop' | 'orders' | 'favorites'>('shop');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   
   const { data: products, isLoading } = useProducts();
@@ -132,6 +133,14 @@ const UserView = () => {
         >
           <Store size={14} /> TIENDA
         </button>
+        <button
+            onClick={() => setActiveTab('favorites')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              activeTab === 'favorites' ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/20' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Heart size={18} /> FAVORITOS
+          </button>
         <button
           onClick={() => setActiveTab('orders')}
           className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${
@@ -389,6 +398,14 @@ const UserView = () => {
             </div>
           )}
         </>
+      ) : activeTab === 'favorites' ? (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-white">Tus Favoritos</h2>
+            <p className="text-slate-400 text-sm">Productos que guardaste para después</p>
+          </div>
+          <UserFavorites />
+        </div>
       ) : (
         <div className="max-w-4xl">
           <UserOrders />

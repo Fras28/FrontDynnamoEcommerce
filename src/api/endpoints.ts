@@ -144,5 +144,17 @@ export const categoriesApi = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/categories/${id}`);
+  },  
+};
+// ==================== FAVORITES ====================
+export const favoritesApi = {
+  toggle: async (productId: number) => {
+    const response = await api.post('/favorites/toggle', { productId });
+    return response.data; // Retorna { action: 'added' | 'removed' }
   },
+  
+  getUserFavorites: async () => {
+    const response = await api.get('/favorites');
+    return response.data;
+  }
 };
