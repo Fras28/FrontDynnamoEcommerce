@@ -47,7 +47,7 @@ const Layout = ({ children, response }: LayoutProps) => {
 
   return (
     <div
-      className="min-h-screen text-slate-200 p-4 md:p-8 font-sans selection:bg-indigo-500/30 bg-cover bg-center bg-fixed bg-no-repeat relative"
+      className="text-slate-200 p-4 md:p-8 font-sans selection:bg-indigo-500/30 bg-cover  bg-no-repeat relative"
       style={{
         backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.6)), url(${bgFungi})`,
         backgroundSize: 'cover',
