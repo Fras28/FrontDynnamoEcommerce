@@ -25,7 +25,7 @@ import Navbar from './components/comon/Navbar';
 // Esto se verá cada vez que recargues la página en la consola
 console.log(
   `%c🚀 ${VERSION_INFO.name} v${VERSION_INFO.version} | ${VERSION_INFO.environment}`,
-  "color: #26262d; font-weight: bold; font-size: 12px;"
+  "color: #0fe778; font-weight: bold; font-size: 12px;"
 );
 
 // Response type para el footer de logs

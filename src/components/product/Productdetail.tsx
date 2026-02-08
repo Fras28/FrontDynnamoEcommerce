@@ -336,7 +336,7 @@ const ProductDetail = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-slate-800">
               <div className="flex items-center gap-2 sm:gap-3 text-slate-400 justify-center sm:justify-start">
                 <Truck size={16} className="sm:w-[18px] sm:h-[18px] text-indigo-500 flex-shrink-0" />
-                <span className="text-[9px] sm:text-[10px] font-bold whitespace-nowrap">ENVÍO GRATIS</span>
+                <span className="text-[9px] sm:text-[10px] font-bold whitespace-nowrap">ENVÍO GRATIS superando los $90.000</span>
               </div>
               <div className="flex items-center gap-2 sm:gap-3 text-slate-400 justify-center sm:justify-start">
                 <Shield size={16} className="sm:w-[18px] sm:h-[18px] text-indigo-500 flex-shrink-0" />
@@ -344,7 +344,7 @@ const ProductDetail = () => {
               </div>
               <div className="flex items-center gap-2 sm:gap-3 text-slate-400 justify-center sm:justify-start">
                 <RotateCcw size={16} className="sm:w-[18px] sm:h-[18px] text-indigo-500 flex-shrink-0" />
-                <span className="text-[9px] sm:text-[10px] font-bold whitespace-nowrap">DEVOLUCIÓN 30 DÍAS</span>
+                <span className="text-[9px] sm:text-[10px] font-bold whitespace-nowrap">DEVOLUCIÓN 30 DÍAS (producto cerrado)</span>
               </div>
             </div>
           </div>
