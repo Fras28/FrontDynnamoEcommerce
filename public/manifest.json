@@ -1,6 +1,6 @@
 {
-    "short_name": "TecnoGen",
-    "name": "TecnoGen - Energía Solar Argentina",
+    "short_name": "Alquimystic",
+    "name": "Alquimystic - Consiencia natural, adaptogenos y mas poder ",
     "icons": [
       {
         "src": "favicon.ico",
@@ -20,6 +20,6 @@
     ],
     "start_url": ".",
     "display": "standalone",
-    "theme_color": "#0FE778",
+    "theme_color": "#26262d",
     "background_color": "#ffffff"
   }

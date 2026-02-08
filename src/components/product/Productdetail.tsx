@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -24,9 +24,11 @@ import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
 import { notifications } from '@mantine/notifications';
 import RelatedProducts from '../../components/product/RelatedProducts';
+import { extractProductId } from '../../utils/urlUtils';
 
 const ProductDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  // ✅ Obtener el slug completo con ID (ej: "123-laptop-gaming")
+  const { slugWithId } = useParams<{ slugWithId: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCartStore();
   
@@ -34,15 +36,40 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // ✅ Extraer el ID numérico del slug
+  const productId = slugWithId ? extractProductId(slugWithId) : null;
+
+  // ✅ Scroll al inicio cuando se carga el componente
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [slugWithId]); // Se ejecuta cuando cambia el slug
+
   // Fetch product data
   const { data: product, isLoading, error } = useQuery<Product>({
-    queryKey: ['product', id],
+    queryKey: ['product', productId],
     queryFn: async () => {
-      const { data } = await api.get(`/products/${id}`);
+      if (!productId) throw new Error('ID de producto inválido');
+      const { data } = await api.get(`/products/${productId}`);
       return data;
     },
-    enabled: !!id,
+    enabled: !!productId,
   });
+
+  if (!productId) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <AlertCircle size={64} className="text-red-500 mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-2">URL inválida</h2>
+        <p className="text-slate-400 mb-6">La dirección del producto no es correcta</p>
+        <button 
+          onClick={() => navigate('/catalogo')}
+          className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition-all"
+        >
+          Volver al Catálogo
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -60,11 +87,12 @@ const ProductDetail = () => {
       <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
         <AlertCircle size={64} className="text-red-500 mb-4" />
         <h2 className="text-2xl font-bold text-white mb-2">Producto no encontrado</h2>
+        <p className="text-slate-400 mb-6">El producto que buscas no existe o fue eliminado</p>
         <button 
-          onClick={() => navigate('/productos')}
-          className="text-indigo-400 hover:text-indigo-300 font-bold"
+          onClick={() => navigate('/catalogo')}
+          className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition-all"
         >
-          Volver a la tienda
+          Volver al Catálogo
         </button>
       </div>
     );
@@ -74,7 +102,7 @@ const ProductDetail = () => {
   const isOutOfStock = product.stock === 0;
   const isLowStock = product.stock > 0 && product.stock <= 5;
   
-  // ✅ CORREGIDO: Array de imágenes
+  // Array de imágenes
   const images = product.images && product.images.length > 0 
     ? product.images.map(img => img.url) 
     : ['https://placehold.co/600x600/1e293b/4f46e5?text=Sin+Imagen'];
@@ -124,41 +152,41 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen text-white pb-20">
-      {/* Header / Nav */}
-      <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+    <div className="min-h-screen text-white pb-20 overflow-x-hidden">
+      {/* Header / Nav - Optimizado para mobile */}
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex items-center justify-between">
         <button 
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
+          className="flex items-center gap-1.5 sm:gap-2 text-slate-400 hover:text-white transition-colors group"
         >
-          <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center group-hover:bg-slate-800">
-            <ChevronLeft size={20} />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 flex items-center justify-center group-hover:bg-slate-800">
+            <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
           </div>
-          <span className="font-bold text-sm tracking-widest">VOLVER</span>
+          <span className="font-bold text-xs sm:text-sm tracking-wider sm:tracking-widest">VOLVER</span>
         </button>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 sm:gap-2">
           <button 
             onClick={() => setIsFavorite(!isFavorite)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
               isFavorite ? 'bg-pink-500/20 text-pink-500' : 'bg-slate-900 text-slate-400 hover:text-white'
             }`}
           >
-            <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+            <Heart size={18} className="sm:w-5 sm:h-5" fill={isFavorite ? "currentColor" : "none"} />
           </button>
           <button 
             onClick={handleShare}
-            className="w-10 h-10 rounded-full bg-slate-900 text-slate-400 hover:text-white flex items-center justify-center"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 text-slate-400 hover:text-white flex items-center justify-center"
           >
-            <Share2 size={20} />
+            <Share2 size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 gap-12 mt-4">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mt-2 sm:mt-4">
         {/* Lado Izquierdo: Galería de Imágenes */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4 w-full">
           {/* Imagen Principal con Navegación */}
-          <div className="relative aspect-square rounded-[2.5rem] overflow-hidden bg-slate-900 border border-slate-800 group">
+          <div className="relative aspect-square rounded-2xl sm:rounded-[2.5rem] overflow-hidden bg-slate-900 border border-slate-800 group w-full">
             <img 
               src={images[selectedImage]} 
               alt={`${product.name} - Imagen ${selectedImage + 1}`}
@@ -166,15 +194,15 @@ const ProductDetail = () => {
             />
             
             {/* Badges */}
-            <div className="absolute top-6 left-6 flex flex-col gap-2">
+            <div className="absolute top-3 sm:top-6 left-3 sm:left-6 flex flex-col gap-1.5 sm:gap-2">
               {product.isActive && (
-                <span className="bg-indigo-600 text-[10px] font-black px-3 py-1 rounded-full tracking-tighter flex items-center gap-1 shadow-lg">
-                  <Sparkles size={10} /> NUEVO
+                <span className="bg-indigo-600 text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full tracking-tighter flex items-center gap-1 shadow-lg">
+                  <Sparkles size={9} className="sm:w-2.5 sm:h-2.5" /> NUEVO
                 </span>
               )}
               {isLowStock && (
-                <span className="bg-amber-500 text-black text-[10px] font-black px-3 py-1 rounded-full tracking-tighter flex items-center gap-1 shadow-lg">
-                  <Zap size={10} /> ¡ÚLTIMAS UNIDADES!
+                <span className="bg-amber-500 text-black text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full tracking-tighter flex items-center gap-1 shadow-lg">
+                  <Zap size={9} className="sm:w-2.5 sm:h-2.5" /> ¡ÚLTIMAS UNIDADES!
                 </span>
               )}
             </div>
@@ -184,20 +212,20 @@ const ProductDetail = () => {
               <>
                 <button
                   onClick={handlePrevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/50 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-900/70"
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-900/50 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-900/70"
                 >
-                  <ChevronLeft size={24} />
+                  <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
                 </button>
                 <button
                   onClick={handleNextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/50 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-900/70"
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-900/50 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-900/70"
                 >
-                  <ChevronRight size={24} />
+                  <ChevronRight size={20} className="sm:w-6 sm:h-6" />
                 </button>
                 
                 {/* Contador de imágenes */}
-                <div className="absolute bottom-6 right-6 bg-slate-900/50 backdrop-blur-md px-4 py-2 rounded-full">
-                  <span className="text-sm font-bold">
+                <div className="absolute bottom-3 sm:bottom-6 right-3 sm:right-6 bg-slate-900/50 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 rounded-full">
+                  <span className="text-xs sm:text-sm font-bold">
                     {selectedImage + 1} / {images.length}
                   </span>
                 </div>
@@ -205,14 +233,14 @@ const ProductDetail = () => {
             )}
           </div>
 
-          {/* Miniaturas */}
+          {/* Miniaturas - Scroll horizontal optimizado */}
           {images.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
               {images.map((url, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
-                  className={`relative min-w-[80px] h-[80px] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                  className={`relative min-w-[70px] sm:min-w-[80px] h-[70px] sm:h-[80px] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
                     selectedImage === idx 
                       ? 'border-indigo-500 scale-105' 
                       : 'border-slate-800 opacity-50 hover:opacity-100 hover:border-slate-600'
@@ -233,53 +261,53 @@ const ProductDetail = () => {
           )}
         </div>
 
-        {/* Lado Derecho: Info */}
-        <div className="bg-slate-900/50 border border-slate-800 rounded-[2rem] p-8 space-y-6">
-          <div className="mb-8">
+        {/* Lado Derecho: Info - Optimizado para mobile */}
+        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 w-full">
+          <div className="mb-4 sm:mb-8">
             {product.category && (
-              <div className="flex items-center gap-2 text-indigo-400 mb-4">
-                <Tag size={14} />
-                <span className="text-xs font-black uppercase tracking-[0.2em]">
+              <div className="flex items-center gap-2 text-indigo-400 mb-3 sm:mb-4">
+                <Tag size={12} className="sm:w-3.5 sm:h-3.5" />
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider sm:tracking-[0.2em]">
                   {product.category.name}
                 </span>
               </div>
             )}
             
-            <h1 className="text-4xl lg:text-5xl font-black mb-4 leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black mb-3 sm:mb-4 leading-tight break-words">
               {product.name}
             </h1>
             
-            <div className="flex items-baseline gap-4 mb-6">
-              <span className="text-4xl font-black text-white">
+            <div className="flex items-baseline gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <span className="text-3xl sm:text-4xl font-black text-white">
                 ${Number(product.price).toLocaleString()}
               </span>
-              <span className="text-slate-500 text-sm font-medium">IVA incluido</span>
+              <span className="text-slate-500 text-xs sm:text-sm font-medium">IVA incluido</span>
             </div>
 
-            <p className="text-slate-400 leading-relaxed text-lg mb-8">
+            <p className="text-slate-400 leading-relaxed text-sm sm:text-base lg:text-lg mb-4 sm:mb-8 break-words">
               {product.description || 'Sin descripción disponible para este producto profesional.'}
             </p>
           </div>
 
           {/* Selector de Cantidad y Botón */}
-          <div className="bg-slate-900/50 border border-slate-800 rounded-[2rem] p-8 space-y-6">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-sm tracking-widest text-slate-400">CANTIDAD</span>
-              <div className="flex items-center gap-6 rounded-full p-2 border border-slate-800">
+          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 w-full">
+            <div className="flex items-center justify-between gap-4">
+              <span className="font-bold text-[10px] sm:text-sm tracking-wider sm:tracking-widest text-slate-400 whitespace-nowrap">CANTIDAD</span>
+              <div className="flex items-center gap-3 sm:gap-6 rounded-full p-1.5 sm:p-2 border border-slate-800">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1 || isOutOfStock}
-                  className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-900 disabled:opacity-20 transition-colors"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center hover:bg-slate-900 disabled:opacity-20 transition-colors"
                 >
-                  <Minus size={18} />
+                  <Minus size={16} className="sm:w-[18px] sm:h-[18px]" />
                 </button>
-                <span className="font-black text-xl min-w-[2ch] text-center">{quantity}</span>
+                <span className="font-black text-lg sm:text-xl min-w-[2ch] text-center">{quantity}</span>
                 <button 
                   onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                   disabled={quantity >= product.stock || isOutOfStock}
-                  className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-900 disabled:opacity-20 transition-colors"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center hover:bg-slate-900 disabled:opacity-20 transition-colors"
                 >
-                  <Plus size={18} />
+                  <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
                 </button>
               </div>
             </div>
@@ -288,42 +316,42 @@ const ProductDetail = () => {
               <button
                 onClick={handleAddToCart}
                 disabled={isOutOfStock}
-                className="w-full bg-indigo-600 text-white py-6 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-indigo-500 transition-all disabled:bg-slate-800 disabled:text-slate-500 group"
+                className="w-full bg-indigo-600 text-white py-4 sm:py-6 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-3 hover:bg-indigo-500 transition-all disabled:bg-slate-800 disabled:text-slate-500 group"
               >
                 {isOutOfStock ? (
                   <>
-                    <Package size={20} />
+                    <Package size={18} className="sm:w-5 sm:h-5" />
                     PRODUCTO AGOTADO
                   </>
                 ) : (
                   <>
-                    <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
+                    <ShoppingCart size={18} className="sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
                     AÑADIR AL CARRITO
                   </>
                 )}
               </button>
             </div>
 
-            {/* Beneficios */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-800">
-              <div className="flex items-center gap-3 text-slate-400">
-                <Truck size={18} className="text-indigo-500" />
-                <span className="text-[10px] font-bold">ENVÍO GRATIS</span>
+            {/* Beneficios - Stack en mobile, grid en desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-slate-800">
+              <div className="flex items-center gap-2 sm:gap-3 text-slate-400 justify-center sm:justify-start">
+                <Truck size={16} className="sm:w-[18px] sm:h-[18px] text-indigo-500 flex-shrink-0" />
+                <span className="text-[9px] sm:text-[10px] font-bold whitespace-nowrap">ENVÍO GRATIS</span>
               </div>
-              <div className="flex items-center gap-3 text-slate-400">
-                <Shield size={18} className="text-indigo-500" />
-                <span className="text-[10px] font-bold">GARANTÍA OFICIAL</span>
+              <div className="flex items-center gap-2 sm:gap-3 text-slate-400 justify-center sm:justify-start">
+                <Shield size={16} className="sm:w-[18px] sm:h-[18px] text-indigo-500 flex-shrink-0" />
+                <span className="text-[9px] sm:text-[10px] font-bold whitespace-nowrap">GARANTÍA OFICIAL</span>
               </div>
-              <div className="flex items-center gap-3 text-slate-400">
-                <RotateCcw size={18} className="text-indigo-500" />
-                <span className="text-[10px] font-bold">DEVOLUCIÓN 30 DÍAS</span>
+              <div className="flex items-center gap-2 sm:gap-3 text-slate-400 justify-center sm:justify-start">
+                <RotateCcw size={16} className="sm:w-[18px] sm:h-[18px] text-indigo-500 flex-shrink-0" />
+                <span className="text-[9px] sm:text-[10px] font-bold whitespace-nowrap">DEVOLUCIÓN 30 DÍAS</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ✅ NUEVO: Carousel de Productos Relacionados */}
+      {/* Carousel de Productos Relacionados */}
       <RelatedProducts 
         currentProductId={product.id}
         categoryId={product.categoryId || undefined}

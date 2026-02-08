@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, Store, ShoppingBag, Plus, Info, Tag, Filter, AlertCircle, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { useProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
@@ -8,10 +8,12 @@ import { Product } from '../../types';
 import { notifications } from '@mantine/notifications';
 import UserOrders from './UserOrders';
 import ProductImage from '../product/ProductImage';
+import { generateProductUrl, generateSlug } from '../../utils/urlUtils';
 
 
 const UserView = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'shop' | 'orders'>('shop');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   
@@ -19,7 +21,39 @@ const UserView = () => {
   const { data: categories, isLoading: loadingCategories } = useCategories();
   const { addToCart, cart } = useCartStore();
 
-  const handleAddToCart = (product: Product) => {
+  // ✅ Leer filtro de categoría desde URL
+  useEffect(() => {
+    const categoryParam = searchParams.get('categoria');
+    if (categoryParam && categories) {
+      const category = categories.find(c => generateSlug(c.name) === categoryParam);
+      if (category) {
+        setSelectedCategory(category.id);
+      }
+    }
+  }, [searchParams, categories]);
+
+  // ✅ Actualizar URL cuando cambia el filtro
+  const handleCategoryChange = (categoryId: number | null) => {
+    setSelectedCategory(categoryId);
+    
+    if (categoryId === null) {
+      // Remover el filtro de la URL
+      searchParams.delete('categoria');
+      setSearchParams(searchParams);
+    } else {
+      // Agregar/actualizar el filtro en la URL
+      const category = categories?.find(c => c.id === categoryId);
+      if (category) {
+        searchParams.set('categoria', generateSlug(category.name));
+        setSearchParams(searchParams);
+      }
+    }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    // ✅ Prevenir navegación cuando se hace click en el botón
+    e.stopPropagation();
+    
     if (product.stock === 0) {
       notifications.show({
         title: 'Producto agotado',
@@ -55,6 +89,19 @@ const UserView = () => {
       icon: <CheckCircle size={18} />,
       autoClose: 2000,
     });
+  };
+
+  const handleProductClick = (productId: number, productName: string) => {
+    // ✅ Navegar al detalle del producto con slug SEO-friendly
+    const url = generateProductUrl(productId, productName);
+    navigate(url);
+  };
+
+  const handleInfoClick = (e: React.MouseEvent, productId: number, productName: string) => {
+    // ✅ Prevenir navegación duplicada cuando se hace click en el botón Info
+    e.stopPropagation();
+    const url = generateProductUrl(productId, productName);
+    navigate(url);
   };
 
   const filteredProducts = selectedCategory
@@ -106,7 +153,7 @@ const UserView = () => {
                 NUESTRO <span className="text-indigo-400">CATÁLOGO</span>
               </h2>
               <p className="text-slate-500 text-sm mt-1">
-                Explora las mejores ofertas tecnológicas disponibles.
+                Explora todo sobre los mejores hongos adaptogenos
               </p>
             </div>
 
@@ -118,7 +165,7 @@ const UserView = () => {
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => setSelectedCategory(null)}
+                  onClick={() => handleCategoryChange(null)}
                   className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${
                     selectedCategory === null
                       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
@@ -136,7 +183,7 @@ const UserView = () => {
                   categories?.map((category) => (
                     <button
                       key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
+                      onClick={() => handleCategoryChange(category.id)}
                       className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all flex items-center gap-1.5 ${
                         selectedCategory === category.id
                           ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20'
@@ -163,7 +210,7 @@ const UserView = () => {
                 </span>
               </p>
               <button
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => handleCategoryChange(null)}
                 className="ml-auto text-xs text-slate-400 hover:text-white transition-colors font-bold"
               >
                 Limpiar filtro
@@ -172,18 +219,11 @@ const UserView = () => {
           )}
 
           {/* Grid de Productos */}
-          {filteredProducts && filteredProducts.length === 0 ? (
-            <div className="bg-slate-900/50 border border-dashed border-slate-800 p-20 rounded-[3rem] text-center">
-              <Tag className="mx-auto text-slate-700 mb-4" size={48} />
-              <p className="text-slate-600 text-sm font-black uppercase tracking-[0.2em] italic">
-                No hay productos en esta categoría
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts?.map((product: Product, index: number) => {
-                const isLowStock = product.stock <= 5 && product.stock > 0;
+          {filteredProducts && filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product, index) => {
                 const isOutOfStock = product.stock === 0;
+                const isLowStock = product.stock > 0 && product.stock <= 5;
                 const itemInCart = cart.find(item => item.id === product.id);
                 const remainingStock = product.stock - (itemInCart?.quantity || 0);
 
@@ -200,7 +240,8 @@ const UserView = () => {
                 return (
                   <div
                     key={product.id}
-                    className={`group bg-slate-900 border rounded-[2.5rem] p-4 transition-all duration-500 hover:shadow-2xl flex flex-col ${
+                    onClick={() => handleProductClick(product.id, product.name)}
+                    className={`group bg-slate-900 border rounded-[2.5rem] p-4 transition-all duration-500 hover:shadow-2xl flex flex-col cursor-pointer ${
                       isOutOfStock 
                         ? 'border-slate-800/50 opacity-60' 
                         : 'border-slate-800 hover:border-indigo-500/50 hover:shadow-indigo-500/10'
@@ -304,7 +345,7 @@ const UserView = () => {
 
                       <div className="pt-4 flex gap-2">
                         <button
-                          onClick={() => handleAddToCart(product)}
+                          onClick={(e) => handleAddToCart(e, product)}
                           className={`flex-1 py-3.5 rounded-2xl font-black text-[10px] tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg ${
                             isOutOfStock
                               ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
@@ -329,7 +370,7 @@ const UserView = () => {
                           )}
                         </button>
                         <button 
-                          onClick={() => navigate(`/product/${product.id}`)}
+                          onClick={(e) => handleInfoClick(e, product.id, product.name)}
                           className="p-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-2xl transition-all active:scale-95 border border-slate-700/50 group/btn"
                           title="Ver detalles"
                         >
@@ -340,6 +381,11 @@ const UserView = () => {
                   </div>
                 );
               })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20">
+              <AlertCircle className="text-slate-600 mb-4" size={48} />
+              <p className="text-slate-400 font-medium">No se encontraron productos</p>
             </div>
           )}
         </>
