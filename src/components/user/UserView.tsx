@@ -38,6 +38,13 @@ const UserView = () => {
     }
   }, [searchParams, categories]);
 
+  // ✅ Resetear activeTab a 'shop' si el usuario hace logout y estaba en favoritos/pedidos
+  useEffect(() => {
+    if (!user && (activeTab === 'favorites' || activeTab === 'orders')) {
+      setActiveTab('shop');
+    }
+  }, [user, activeTab]);
+
   // ✅ Actualizar URL cuando cambia el filtro
   const handleCategoryChange = (categoryId: number | null) => {
     setSelectedCategory(categoryId);
@@ -146,24 +153,31 @@ const UserView = () => {
         >
           <Store size={14} /> TIENDA
         </button>
-        <button
-            onClick={() => setActiveTab('favorites')}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'favorites' ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/20' : 'text-slate-400 hover:text-slate-200'
+        {/* ✅ Solo mostrar Favoritos si el usuario está autenticado */}
+        {user && (
+          <button
+              onClick={() => setActiveTab('favorites')}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                activeTab === 'favorites' ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/20' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Heart size={18} /> FAVORITOS
+            </button>
+        )}
+
+        {/* ✅ Solo mostrar Mis Pedidos si el usuario está autenticado */}
+        {user && (
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${
+              activeTab === 'orders' 
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
+              : 'text-slate-500 hover:text-slate-300'
             }`}
           >
-            <Heart size={18} /> FAVORITOS
+            <ShoppingBag size={14} /> MIS PEDIDOS
           </button>
-        <button
-          onClick={() => setActiveTab('orders')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${
-            activeTab === 'orders' 
-            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
-            : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <ShoppingBag size={14} /> MIS PEDIDOS
-        </button>
+        )}
       </div>
 
       {activeTab === 'shop' ? (
