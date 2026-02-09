@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useFavorites } from '../../hooks/useFavorites'; // Ajusta la ruta
-import { useAuth } from '../../hooks/useAuth';
 import {
   ShoppingCart,
   Heart,
@@ -15,7 +13,6 @@ import {
   Shield,
   RotateCcw,
   AlertCircle,
-  CheckCircle,
   Tag,
   Sparkles,
   Zap,
@@ -38,17 +35,36 @@ const ProductDetail = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authAction, setAuthAction] = useState('');
   const { addToCart } = useCartStore();
-  const { isAuthenticated } = useAuth();
-  const { favorites, toggleFavorite, isToggling } = useFavorites();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
   const productId = slugWithId ? extractProductId(slugWithId) : null;
 
-  // ✅ Lógica de Favoritos: verificamos si este producto está en la lista global
-  const isFavorite = favorites.some((fav: any) => fav.productId === productId);
+  // ✅ Cargar estado de favorito SOLO si el usuario está autenticado
+  useEffect(() => {
+    if (!user || !productId) {
+      setIsFavorite(false);
+      return;
+    }
 
+    const checkFavorite = async () => {
+      try {
+        const { data } = await api.get('/favorites');
+        const isProductFavorite = data.some((fav: any) => fav.productId === productId);
+        setIsFavorite(isProductFavorite);
+      } catch (error) {
+        console.error('Error checking favorite:', error);
+        setIsFavorite(false);
+      }
+    };
+
+    checkFavorite();
+  }, [user, productId]);
+
+  // ✅ Query del producto (NO requiere autenticación)
   const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: ['product', productId],
     queryFn: async () => {
@@ -58,26 +74,43 @@ const ProductDetail = () => {
     enabled: !!productId,
   });
   
-  const handleToggleFavorite = () => {
+  // ✅ Toggle favorito con manejo manual
+  const handleToggleFavorite = async () => {
     if (!user) {
       setAuthAction('agregar este producto a favoritos');
       setShowAuthModal(true);
       return;
     }
     
-    if (productId) { // Validación de seguridad
-      toggleFavorite(productId);
+    if (!productId || isToggling) return;
+
+    setIsToggling(true);
+    try {
+      const { data } = await api.post('/favorites/toggle', { productId });
+      
+      setIsFavorite(data.action === 'added');
+      
+      notifications.show({
+        title: data.action === 'added' ? '¡Me encanta!' : 'Favorito eliminado',
+        message: data.message,
+        color: data.action === 'added' ? 'pink' : 'gray',
+      });
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'No se pudo actualizar favoritos',
+        color: 'red',
+      });
+    } finally {
+      setIsToggling(false);
     }
   };
-
-
 
   // ✅ Scroll al inicio cuando se carga el componente
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [slugWithId]); // Se ejecuta cuando cambia el slug
-
- 
+  }, [slugWithId]);
 
   if (!productId) {
     return (
@@ -183,32 +216,28 @@ const ProductDetail = () => {
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex items-center justify-between">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 sm:gap-2 text-slate-400 hover:text-white transition-colors group"
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-bold text-xs sm:text-sm"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 flex items-center justify-center group-hover:bg-slate-800">
-            <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
-          </div>
-          <span className="font-bold text-xs sm:text-sm tracking-wider sm:tracking-widest">VOLVER</span>
+          <ChevronLeft size={18} className="sm:w-5 sm:h-5" />
+          <span className="hidden sm:inline">Volver</span>
         </button>
-        <div className="flex gap-1.5 sm:gap-2">
-        <button
-        onClick={handleToggleFavorite}
-        disabled={isToggling}
-        className={`p-3 rounded-xl border transition-all active:scale-95 ${
-          isFavorite 
-            ? 'bg-pink-500/10 border-pink-500/50 text-pink-500' // Estilo activo
-            : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white' // Estilo inactivo
-        } ${isToggling ? 'opacity-50' : ''}`}
-      >
-        <Heart 
-          size={24} 
-          fill={isFavorite ? "currentColor" : "none"} // Rellena el corazón si es favorito
-          className={isToggling ? 'animate-pulse' : ''}
-        />
-      </button>
+
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button
+            onClick={handleToggleFavorite}
+            disabled={isToggling}
+            className={`p-2 sm:p-3 rounded-full border-2 transition-all ${isFavorite
+                ? 'bg-red-500 border-red-500 text-white'
+                : 'border-slate-700 text-slate-400 hover:border-red-500 hover:text-red-500'
+              } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          >
+            <Heart size={18} className={`sm:w-5 sm:h-5 ${isFavorite ? 'fill-current' : ''}`} />
+          </button>
           <button
             onClick={handleShare}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 text-slate-400 hover:text-white flex items-center justify-center"
+            className="p-2 sm:p-3 rounded-full border-2 border-slate-700 text-slate-400 hover:border-indigo-500 hover:text-indigo-500 transition-all"
+            title="Compartir producto"
           >
             <Share2 size={18} className="sm:w-5 sm:h-5" />
           </button>
@@ -388,6 +417,13 @@ const ProductDetail = () => {
         currentProductId={product.id}
         categoryId={product.categoryId || undefined}
         categoryName={product.category?.name}
+      />
+
+      {/* ✅ Modal de autenticación requerida */}
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        action={authAction}
       />
     </div>
   );
