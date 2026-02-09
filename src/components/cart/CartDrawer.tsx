@@ -1,12 +1,15 @@
-
 import { X, Minus, Plus, Trash2, ShoppingBag, ShoppingCart, AlertTriangle, ImageOff } from 'lucide-react';
+import { useState } from 'react';
 import { useCartStore } from '../../store/cartStore';
+import { useAuthStore } from '../../store/authStore';
 import { notifications } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { generateProductUrl } from '../../utils/urlUtils';
+import AuthRequiredModal from '../Auth/AuthRequiredModal';
 
 const CartDrawer = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const { 
     cart, 
     isOpen, 
@@ -17,6 +20,8 @@ const CartDrawer = () => {
     getTotal, 
     getTotalItems 
   } = useCartStore();
+
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // ✅ Verificar problemas de stock
   const getStockIssues = () => {
@@ -35,6 +40,12 @@ const CartDrawer = () => {
         message: 'Agrega productos antes de continuar',
         color: 'orange',
       });
+      return;
+    }
+
+    // Si no está autenticado, mostrar modal
+    if (!user) {
+      setShowAuthModal(true);
       return;
     }
 
@@ -103,7 +114,7 @@ const CartDrawer = () => {
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  navigate('/');
+                  navigate('/catalogo');
                 }}
                 className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-colors"
               >
@@ -263,7 +274,7 @@ const CartDrawer = () => {
                 </>
               ) : (
                 <>
-                  IR AL CHECKOUT
+                  {!user ? 'INICIAR SESIÓN PARA COMPRAR' : 'IR AL CHECKOUT'}
                   <ShoppingCart size={20} />
                 </>
               )}
@@ -285,6 +296,13 @@ const CartDrawer = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de autenticación */}
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        action="finalizar tu compra"
+      />
     </>
   );
 };

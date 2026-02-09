@@ -1,208 +1,160 @@
-import { useState } from 'react';
+//
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart as CartIcon, LogOut, Shield, Menu, X, Store } from 'lucide-react';
+import { ShoppingCart as CartIcon, LogOut, Shield, Menu, X, Store, LogIn, Sparkles } from 'lucide-react';
 import { Role } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/cartStore';
 import Logo from "../../assets/alquemystic.jpg";
 
-const Navbar = () => {
+const Navbar = ({ isLanding = false }: { isLanding?: boolean }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { getTotalItems, setIsOpen } = useCartStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // Determinar en qué vista estamos
+  // Efecto para detectar scroll solo en la landing
+  useEffect(() => {
+    if (!isLanding) return;
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isLanding]);
+
   const isAdminView = location.pathname.startsWith('/admin');
   const isCatalogView = location.pathname.startsWith('/catalogo') || location.pathname.startsWith('/productos');
   const isAdminUser = user?.role === Role.ADMIN;
 
-  const handleViewSwitch = () => {
-    if (isAdminView) {
-      // Si está en admin, ir al catálogo
-      navigate('/catalogo');
-    } else {
-      // Si está en catálogo, volver a admin
-      navigate('/admin');
-    }
-    setIsMenuOpen(false);
-    // Scroll al inicio
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const navContainerClasses = isLanding 
+    ? `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'py-2 px-4' : 'py-6 px-4 sm:px-8'}`
+    : 'w-full py-4 px-2';
 
-  const handleLogout = () => {
-    logout();
-    setIsMenuOpen(false);
-  };
-
-  const handleCartOpen = () => {
-    setIsOpen(true);
-    setIsMenuOpen(false);
-  };
+  const navContentClasses = `max-w-7xl mx-auto transition-all duration-300 ${
+    isLanding && !isScrolled
+      ? 'bg-transparent border-transparent'
+      : 'bg-slate-900/40 border-slate-800 backdrop-blur-xl shadow-2xl'
+  } border rounded-2xl sm:rounded-[2rem] overflow-hidden`;
 
   return (
-    <nav className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl sm:rounded-[2rem] backdrop-blur-xl shadow-2xl overflow-hidden">
-      <div className="flex justify-between items-center p-4 sm:p-6">
-        {/* Logo y usuario */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-          <img
-            src={Logo}
-            alt="Alquimystic"
-            onClick={() => navigate(user?.role === Role.ADMIN ? '/admin' : '/catalogo')}
-            className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-            title="Ir al inicio"
-          />
-
-          <div className="min-w-0 flex-1">
-            <h1 
-              onClick={() => navigate(user?.role === Role.ADMIN ? '/admin' : '/catalogo')}
-              className="text-sm sm:text-base md:text-lg font-black tracking-tighter text-white uppercase leading-none truncate cursor-pointer hover:text-indigo-400 transition-colors"
-            >
-              Alquimystic 
-            </h1>
-            {user && (
-              <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
-                <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-tighter truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">
+    <div className={navContainerClasses}>
+      <nav className={navContentClasses}>
+        <div className="flex justify-between items-center p-4 sm:p-6">
+          {/* Logo y Textos */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <img
+              src={Logo}
+              alt="Alquimystic"
+              onClick={() => navigate('/')}
+              className="w-10 h-10 sm:w-12 md:w-16 md:h-16 object-contain flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            />
+            <div className="min-w-0 flex-1">
+              <h1 
+                onClick={() => navigate('/')}
+                className="text-sm sm:text-base md:text-lg font-black tracking-tighter text-white uppercase leading-none truncate cursor-pointer hover:text-indigo-400 transition-colors"
+              >
+                Alquimystic 
+              </h1>
+              {!user && (
+                <p className="text-[8px] sm:text-[9px] font-bold text-indigo-400 uppercase tracking-widest mt-1">
+                  Fermentos & Fungis
+                </p>
+              )}
+              {user && (
+                <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-tighter truncate block mt-1">
                   {user.email}
                 </span>
-                <span className={`text-[7px] sm:text-[8px] px-1.5 sm:px-2 py-0.5 rounded-full font-black uppercase tracking-widest border flex-shrink-0 ${
-                  user.role === Role.ADMIN
-                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                    : 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
-                }`}>
-                  {user.role}
-                </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3 lg:gap-4 flex-shrink-0">
-          {/* Switch de vista para Admin */}
-          {isAdminUser && (
-            <button
-              onClick={handleViewSwitch}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all font-bold text-xs uppercase border ${
-                isCatalogView
-                  ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-600/20'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-              }`}
-              title={isCatalogView ? "Volver al Panel Admin" : "Ver Catálogo"}
-            >
-              {isCatalogView ? (
-                <>
-                  <Shield size={16} />
-                  <span className="hidden lg:inline">Admin</span>
-                </>
-              ) : (
-                <>
-                  <Store size={16} />
-                  <span className="hidden lg:inline">Catálogo</span>
-                </>
-              )}
-            </button>
-          )}
-
-          {/* Carrito (para usuarios normales o admin viendo catálogo) */}
-          {(user?.role !== Role.ADMIN || isCatalogView) && (
-            <button
-              onClick={handleCartOpen}
-              className="relative bg-slate-800 hover:bg-slate-700 p-3 rounded-2xl transition-all active:scale-95 group"
-              title={isCatalogView && isAdminUser ? "Ver carrito (Vista previa)" : "Ver carrito"}
-            >
-              <CartIcon size={20} className="group-hover:text-indigo-400 transition-colors" />
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-slate-950 animate-bounce">
-                  {getTotalItems()}
-                </span>
-              )}
-            </button>
-          )}
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2.5 rounded-xl transition-all active:scale-95 flex items-center gap-2 font-bold text-xs uppercase border border-red-500/20"
-          >
-            <LogOut size={16} />
-            <span className="hidden lg:inline">Cerrar Sesión</span>
-          </button>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all active:scale-95 flex-shrink-0"
-          aria-label="Menu"
-        >
-          {isMenuOpen ? (
-            <X size={20} className="text-white" />
-          ) : (
-            <Menu size={20} className="text-white" />
-          )}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-slate-900/60 backdrop-blur-xl animate-in slide-in-from-top-4 duration-300">
-          <div className="p-4 space-y-2">
-            {/* Switch de vista para Admin en mobile */}
-            {isAdminUser && (
+          {/* Acciones de Escritorio */}
+          <div className="hidden md:flex items-center gap-3 lg:gap-4 flex-shrink-0">
+            {/* BOTÓN: Ir al Catálogo (VISIBLE EN LANDING) */}
+            {isLanding && (
               <button
-                onClick={handleViewSwitch}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-xs uppercase border ${
-                  isCatalogView
-                    ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-600/20'
-                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                }`}
+                onClick={() => navigate('/catalogo')}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
               >
-                {isCatalogView ? (
-                  <>
-                    <Shield size={18} />
-                    <span>Volver al Panel Admin</span>
-                  </>
-                ) : (
-                  <>
-                    <Store size={18} />
-                    <span>Ver Catálogo de Usuario</span>
-                  </>
-                )}
+                <Sparkles size={16} />
+                <span>Explorar Catálogo</span>
               </button>
             )}
 
-            {/* Carrito en mobile */}
-            {(user?.role !== Role.ADMIN || isCatalogView) && (
+            {isAdminUser && (
               <button
-                onClick={handleCartOpen}
-                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-all font-bold text-xs uppercase border border-slate-700"
+                onClick={() => navigate(isAdminView ? '/catalogo' : '/admin')}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold text-xs uppercase transition-all"
               >
-                <div className="flex items-center gap-3">
-                  <CartIcon size={18} />
-                  <span>Ver Carrito</span>
-                </div>
+                {isCatalogView ? <Shield size={16} /> : <Store size={16} />}
+                <span>{isCatalogView ? "Admin" : "Tienda"}</span>
+              </button>
+            )}
+
+            {!isAdminView && (
+              <button
+                onClick={() => setIsOpen(true)}
+                className="relative bg-slate-800 hover:bg-slate-700 p-3 rounded-2xl transition-all active:scale-95 group"
+              >
+                <CartIcon size={20} className="group-hover:text-indigo-400 transition-colors" />
                 {getTotalItems() > 0 && (
-                  <span className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full">
+                  <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-slate-950">
                     {getTotalItems()}
                   </span>
                 )}
               </button>
             )}
 
-            {/* Logout en mobile */}
+            {/* Botón de Auth corregido */}
             <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all font-bold text-xs uppercase border border-red-500/20"
+              onClick={() => user ? logout() : navigate('/login')}
+              className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all font-bold text-xs uppercase border ${
+                user 
+                  ? 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20' 
+                  : 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700'
+              }`}
             >
-              <LogOut size={18} />
-              <span>Cerrar Sesión</span>
+              {user ? <LogOut size={16} /> : <LogIn size={16} />}
+              <span>{user ? 'Cerrar Sesión' : 'Ingresar'}</span>
             </button>
           </div>
+
+          {/* Botón Menú Mobile */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all text-white"
+          >
+            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
-      )}
-    </nav>
+
+        {/* Menú Mobile Desplegable */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-slate-800 bg-slate-900/95 backdrop-blur-xl p-4 space-y-3">
+            {isLanding && (
+              <button
+                onClick={() => { navigate('/catalogo'); setIsMenuOpen(false); }}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs uppercase shadow-lg shadow-indigo-600/20"
+              >
+                <Sparkles size={18} />
+                <span>Explorar Catálogo</span>
+              </button>
+            )}
+            
+            <button
+              onClick={() => { user ? logout() : navigate('/login'); setIsMenuOpen(false); }}
+              className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase border ${
+                user ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-slate-800 text-white border-slate-700'
+              }`}
+            >
+              {user ? <LogOut size={18} /> : <LogIn size={18} />}
+              <span>{user ? 'Cerrar Sesión' : 'Ingresar'}</span>
+            </button>
+          </div>
+        )}
+      </nav>
+    </div>
   );
 };
 

@@ -10,10 +10,15 @@ import UserOrders from './UserOrders';
 import ProductImage from '../product/ProductImage';
 import { generateProductUrl, generateSlug } from '../../utils/urlUtils';
 import UserFavorites from './UserFavorites';
+import { useAuthStore } from '../../store/authStore';
+import AuthRequiredModal from '../Auth/AuthRequiredModal';
 
 
 const UserView = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authAction, setAuthAction] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'shop' | 'orders' | 'favorites'>('shop');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -52,40 +57,46 @@ const UserView = () => {
   };
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
-    // ✅ Prevenir navegación cuando se hace click en el botón
+    // 1. Prevenir navegación
     e.stopPropagation();
-    
+  
+    // 2. Control de autenticación
+    if (!user) {
+      setAuthAction('agregar productos al carrito');
+      setShowAuthModal(true);
+      return;
+    }
+  
+    // 3. Validación de Stock Agotado
     if (product.stock === 0) {
       notifications.show({
         title: 'Producto agotado',
-        message: `"${product.name}" no tiene stock disponible actualmente`,
+        message: `"${product.name}" no tiene stock disponible`,
         color: 'red',
         icon: <AlertCircle size={18} />,
         autoClose: 4000,
       });
       return;
     }
-
+  
+    // 4. Validación de Límite de Stock en Carrito
     const itemInCart = cart.find(item => item.id === product.id);
-    if (itemInCart) {
-      const newQuantity = itemInCart.quantity + 1;
-      if (newQuantity > product.stock) {
-        notifications.show({
-          title: 'Stock insuficiente',
-          message: `Solo hay ${product.stock} unidades disponibles de "${product.name}"`,
-          color: 'orange',
-          icon: <AlertCircle size={18} />,
-          autoClose: 4000,
-        });
-        return;
-      }
+    if (itemInCart && itemInCart.quantity + 1 > product.stock) {
+      notifications.show({
+        title: 'Stock insuficiente',
+        message: `Solo hay ${product.stock} unidades disponibles`,
+        color: 'orange',
+        icon: <AlertCircle size={18} />,
+        autoClose: 4000,
+      });
+      return;
     }
-
+  
+    // 5. Ejecución y Notificación de éxito
     addToCart(product, 1);
-    
     notifications.show({
-      title: 'Producto agregado',
-      message: `"${product.name}" se agregó al carrito`,
+      title: '¡Agregado!',
+      message: `${product.name} añadido al carrito`,
       color: 'green',
       icon: <CheckCircle size={18} />,
       autoClose: 2000,
@@ -97,6 +108,8 @@ const UserView = () => {
     const url = generateProductUrl(productId, productName);
     navigate(url);
   };
+
+
 
   const handleInfoClick = (e: React.MouseEvent, productId: number, productName: string) => {
     // ✅ Prevenir navegación duplicada cuando se hace click en el botón Info
@@ -411,6 +424,11 @@ const UserView = () => {
           <UserOrders />
         </div>
       )}
+          <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        action={authAction}
+      />
     </div>
   );
 };

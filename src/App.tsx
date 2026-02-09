@@ -200,31 +200,27 @@ function App() {
           }
         />
 
-        {/* ✅ Catálogo de Productos - /catalogo (con query params para filtros) */}
+        {/* ✅ Catálogo de Productos - /catalogo (PÚBLICO - sin autenticación requerida) */}
         <Route
           path="/catalogo"
           element={
-            <PrivateRoute>
-              <Layout response={globalResponse}>
-                <UserView />
-              </Layout>
-            </PrivateRoute>
+            <Layout response={globalResponse}>
+              <UserView />
+            </Layout>
           }
         />
 
-        {/* ✅ Detalle de Producto - /productos/:id-nombre-del-producto */}
+        {/* ✅ Detalle de Producto - /productos/:id-nombre-del-producto (PÚBLICO) */}
         <Route
           path="/productos/:slugWithId"
           element={
-            <PrivateRoute>
-              <Layout response={globalResponse}>
-                <ProductDetailWrapper />
-              </Layout>
-            </PrivateRoute>
+            <Layout response={globalResponse}>
+              <ProductDetailWrapper />
+            </Layout>
           }
         />
 
-        {/* ✅ NUEVO: Página de Checkout - /checkout */}
+        {/* ✅ NUEVO: Página de Checkout - /checkout (REQUIERE AUTENTICACIÓN) */}
         <Route
           path="/checkout"
           element={
@@ -311,9 +307,8 @@ function App() {
         />
       </Routes>
 
-      {/* ✅ CartDrawer simplificado disponible para todos los usuarios autenticados */}
-      {/* NOTA: Ya no necesita onOrderSuccess porque solo navega al checkout */}
-      {user && <CartDrawer />}
+      {/* ✅ CartDrawer disponible para todos (mostrará modal si no está autenticado) */}
+      <CartDrawer />
     </BrowserRouter>
   );
 }

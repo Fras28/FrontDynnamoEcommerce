@@ -27,10 +27,16 @@ import { useCartStore } from '../../store/cartStore';
 import { notifications } from '@mantine/notifications';
 import RelatedProducts from '../../components/product/RelatedProducts';
 import { extractProductId } from '../../utils/urlUtils';
+import { useAuthStore } from '../../store/authStore';
+import AuthRequiredModal from '../Auth/AuthRequiredModal';
+
 
 const ProductDetail = () => {
   const { slugWithId } = useParams<{ slugWithId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authAction, setAuthAction] = useState('');
   const { addToCart } = useCartStore();
   const { isAuthenticated } = useAuth();
   const { favorites, toggleFavorite, isToggling } = useFavorites();
@@ -51,19 +57,15 @@ const ProductDetail = () => {
     },
     enabled: !!productId,
   });
-
+  
   const handleToggleFavorite = () => {
-    if (!isAuthenticated) {
-      notifications.show({
-        title: 'Atención',
-        message: 'Debes iniciar sesión para guardar favoritos',
-        color: 'orange',
-      });
+    if (!user) {
+      setAuthAction('agregar este producto a favoritos');
+      setShowAuthModal(true);
       return;
     }
-
-    if (productId) {
-      // 3. Ejecutamos el toggle (el hook se encarga de invalidar la query y refrescar)
+    
+    if (productId) { // Validación de seguridad
       toggleFavorite(productId);
     }
   };
@@ -139,15 +141,17 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    if (isOutOfStock) return;
-
+    if (!user) {
+      setAuthAction('agregar este producto al carrito');
+      setShowAuthModal(true);
+      return;
+    }
+    
     addToCart(product, quantity);
-
     notifications.show({
-      title: '¡Añadido al carrito!',
-      message: `${quantity}x ${product.name}`,
-      color: 'green',
-      icon: <CheckCircle size={18} />,
+      title: '¡Agregado al carrito!',
+      message: `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'} de ${product.name}`,
+      color: 'green'
     });
   };
 

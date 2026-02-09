@@ -3,6 +3,7 @@ import { ShoppingBag, ArrowRight, CheckCircle, Sparkles, Leaf, Heart, Brain, Shi
 import { useNavigate } from 'react-router-dom';
 import bgFungi from "../../assets/bg-fungi.webp";
 import Logo from "../../assets/alquemystic.jpg"
+import Navbar from '../comon/Navbar';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -131,34 +132,8 @@ const LandingPage = () => {
         backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.85)), url(${bgFungi})`
       }}
     >
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo */}
-            <div className="flex items-center">
-              <img src={Logo} alt="LogoFungi" className='w-20'/>
-              <div>
-                <h1 className="text-lg md:text-2xl font-black italic tracking-tighter text-white uppercase leading-none">
-                Alquimystic
-                </h1>
-                <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">
-                  Fermentos & Fungis
-                </p>
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <button
-              onClick={() => navigate('/login')}
-              className="group bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 px-4 py-3 md:px-8 md:py-3 rounded-2xl font-black text-sm  tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-95 "
-            >
-              Ver Catálogo
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </div>
-      </nav>
+  
+  <Navbar isLanding={true} />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
