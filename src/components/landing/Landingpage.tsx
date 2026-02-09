@@ -161,7 +161,7 @@ const LandingPage = () => {
 
             <div className="flex flex-wrap gap-4 justify-center pt-4">
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/catalogo')}
                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 px-12 py-5 rounded-2xl font-black text-base uppercase tracking-wider transition-all shadow-2xl shadow-indigo-600/30 active:scale-95"
               >
                 Explorar Productos
@@ -282,7 +282,7 @@ const LandingPage = () => {
               </div>
 
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/catalogo')}
                 className="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 py-4 rounded-2xl font-black uppercase tracking-wider transition-all active:scale-95"
               >
                 Ver en Catálogo
@@ -347,7 +347,7 @@ const LandingPage = () => {
             Descubre el poder transformador de los hongos adaptógenos
           </p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/catalogo')}
             className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 px-16 py-6 rounded-2xl font-black text-lg uppercase tracking-wider transition-all shadow-2xl shadow-indigo-600/30 active:scale-95"
           >
             Explorar Catálogo
