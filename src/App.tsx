@@ -15,12 +15,15 @@ import VersionBadge from './components/comon/VersionBadge';
 import { VERSION_INFO } from '@/utils/version';
 import ProductDetail from './components/product/Productdetail';
 import EmailConfirmation from './components/Auth/EmailConfirmation';
+
 import DemoDashboard from './components/admin/demo/Demodashboard';
 import { useInactiveProducts, useProducts } from './hooks/useProducts';
 import { useAdminOrders, useUpdateOrderStatus } from './hooks/useOrders';
 import { useCategories } from './hooks/useCategories';
 import { extractProductId } from './utils/urlUtils';
 import Navbar from './components/comon/Navbar';
+import PaymentInstructions from './components/cart/Paymentinstructions';
+import CheckoutPage from './pages/Checkoutpage';
 
 // Esto se verá cada vez que recargues la página en la consola
 console.log(
@@ -221,6 +224,18 @@ function App() {
           }
         />
 
+        {/* ✅ NUEVO: Página de Checkout - /checkout */}
+        <Route
+          path="/checkout"
+          element={
+            <PrivateRoute>
+              <Layout response={globalResponse}>
+                <CheckoutPage />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
         {/* ✅ Confirmación de Email */}
         <Route
           path="/auth/confirm-email"
@@ -234,6 +249,18 @@ function App() {
             <PrivateRoute>
               <Layout response={globalResponse}>
                 <PaymentSuccess />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ Instrucciones de Pago (Transferencia/Efectivo) */}
+        <Route
+          path="/payment/instructions/:orderId"
+          element={
+            <PrivateRoute>
+              <Layout response={globalResponse}>
+                <PaymentInstructions />
               </Layout>
             </PrivateRoute>
           }
@@ -284,8 +311,9 @@ function App() {
         />
       </Routes>
 
-      {/* ✅ CartDrawer disponible para todos los usuarios autenticados */}
-      {user && <CartDrawer onOrderSuccess={handleResponse} />}
+      {/* ✅ CartDrawer simplificado disponible para todos los usuarios autenticados */}
+      {/* NOTA: Ya no necesita onOrderSuccess porque solo navega al checkout */}
+      {user && <CartDrawer />}
     </BrowserRouter>
   );
 }

@@ -1,4 +1,4 @@
-import { Heart, ShoppingBag, Info, Plus, AlertCircle } from 'lucide-react';
+import { Heart, Info, Plus} from 'lucide-react';
 import { useFavorites } from '../../hooks/useFavorites';
 import { useCartStore } from '../../store/cartStore';
 import { useNavigate } from 'react-router-dom';

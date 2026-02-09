@@ -99,6 +99,12 @@ export const ordersApi = {
     const response = await api.get<Order[]>('/orders/my-orders');
     return response.data;
   },
+
+  // ✅ NUEVO: Obtener una orden específica por ID
+  getOrderById: async (orderId: number) => {
+    const response = await api.get<Order>(`/orders/${orderId}`);
+    return response.data;
+  },
 };
 
 // ==================== PAYMENTS ====================

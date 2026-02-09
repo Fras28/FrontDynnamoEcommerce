@@ -112,8 +112,17 @@ export interface OrderItem {
   quantity: number;
 }
 
+// ✅ ACTUALIZADO: CreateOrderDto con todos los campos necesarios
 export interface CreateOrderDto {
   items: OrderItem[];
+  // ✅ Total original (subtotal sin descuento)
+  total: number;
+  // ✅ Método de pago seleccionado
+  paymentMethod?: 'mercadopago' | 'transfer' | 'cash';
+  // ✅ Monto del descuento aplicado
+  discount?: number;
+  // ✅ Total final después del descuento
+  finalTotal?: number;
 }
 
 export interface Order {
@@ -122,12 +131,28 @@ export interface Order {
   total: number;
   status: OrderStatus;
   createdAt: string;
+  // ✅ NUEVOS CAMPOS
+  paymentMethod?: 'mercadopago' | 'transfer' | 'cash';
+  discount?: number;
+  finalTotal?: number;
   items: {
     id: number;
     productId: number;
     quantity: number;
     price: number;
+    product?: {
+      id: number;
+      name: string;
+      images?: { url: string }[];
+      imageUrl?: string;
+    };
   }[];
+  user?: {
+    id: number;
+    email: string;
+    phone?: string;
+    address?: string;
+  };
 }
 
 // ✅ TIPOS DE MÉTRICAS
