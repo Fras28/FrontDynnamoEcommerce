@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PackagePlus, Edit3, Save, X, Loader2, Tag, Trash2, Image as ImageIcon } from 'lucide-react';
+import { PackagePlus, Edit3, Save, X, Loader2, Tag, Trash2, Image as ImageIcon, GripVertical, Star } from 'lucide-react';
 import { Product } from '../../../types';
 import CloudinaryUploader from '../CloudinaryUploader';
 import { useCategories } from '@/hooks/useCategories';
@@ -17,6 +17,8 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const { data: categories, isLoading: loadingCategories } = useCategories();
+
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const {
     register,
@@ -80,17 +82,56 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
     }
   };
 
-  // Función para añadir nueva imagen al array
+  // ✅ Función para añadir nueva imagen al array
   const handleImageUploaded = (url: string | null) => {
     if (url) {
       setValue('images', [...currentImages, url], { shouldValidate: true });
     }
   };
 
-  // Función para quitar imagen
+  // ✅ Función para añadir múltiples imágenes
+  const handleMultipleImagesUploaded = (urls: string[]) => {
+    if (urls.length > 0) {
+      setValue('images', [...currentImages, ...urls], { shouldValidate: true });
+    }
+  };
+
+  // ✅ Función para quitar imagen
   const removeImage = (indexToRemove: number) => {
     const updatedImages = currentImages.filter((_, index) => index !== indexToRemove);
     setValue('images', updatedImages, { shouldValidate: true });
+  };
+
+  // ✅ Función para mover imagen a la primera posición (hacerla principal)
+  const setAsPrimary = (index: number) => {
+    if (index === 0) return; // Ya es la principal
+    const newImages = [...currentImages];
+    const [movedImage] = newImages.splice(index, 1);
+    newImages.unshift(movedImage);
+    setValue('images', newImages, { shouldValidate: true });
+  };
+
+  // ✅ Drag & Drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newImages = [...currentImages];
+    const draggedImage = newImages[draggedIndex];
+    
+    newImages.splice(draggedIndex, 1);
+    newImages.splice(index, 0, draggedImage);
+    
+    setValue('images', newImages, { shouldValidate: true });
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const isLoading = createProduct.isPending || updateProduct.isPending;
@@ -111,7 +152,7 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         
-        {/* ✅ SECCIÓN DE IMÁGENES MEJORADA */}
+        {/* ✅ SECCIÓN DE IMÁGENES MEJORADA CON DRAG & DROP */}
         <div className="space-y-3">
           <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest flex items-center gap-2">
             <ImageIcon size={12} />
@@ -120,7 +161,10 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
           
           {/* ✅ Mostrar uploader solo si no ha alcanzado el límite */}
           {currentImages.length < 10 && (
-            <CloudinaryUploader onImageUploaded={handleImageUploaded} />
+            <CloudinaryUploader 
+              onImageUploaded={handleImageUploaded}
+              onMultipleImagesUploaded={handleMultipleImagesUploaded}
+            />
           )}
           
           {currentImages.length >= 10 && (
@@ -131,43 +175,82 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
             </div>
           )}
           
-          {/* ✅ Previsualización de Galería mejorada */}
+          {/* ✅ Previsualización de Galería con Drag & Drop */}
           {currentImages.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
-              {currentImages.map((url, index) => (
-                <div 
-                  key={index} 
-                  className="relative group aspect-square rounded-xl overflow-hidden border-2 border-slate-800 bg-black hover:border-indigo-500 transition-all"
-                >
-                  {/* Badge de imagen principal */}
-                  {index === 0 && (
-                    <div className="absolute top-2 left-2 z-10 bg-indigo-500 text-white text-[8px] font-black px-2 py-1 rounded-full">
-                      PRINCIPAL
-                    </div>
-                  )}
-                  
-                  {/* Badge de orden */}
-                  <div className="absolute top-2 right-2 z-10 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded-full">
-                    #{index + 1}
-                  </div>
-                  
-                  <img 
-                    src={url} 
-                    alt={`Preview ${index + 1}`} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
-                  />
-                  
-                  {/* Overlay de eliminación */}
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute inset-0 bg-red-600/90 text-white opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center backdrop-blur-sm gap-2"
+            <div className="space-y-3">
+              {/* Instrucciones */}
+              <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">
+                <p className="text-indigo-400 text-xs font-bold flex items-center gap-2">
+                  <GripVertical size={14} />
+                  Arrastra las imágenes para reordenar. La primera será la principal.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {currentImages.map((url, index) => (
+                  <div 
+                    key={index}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={`relative group aspect-square rounded-xl overflow-hidden border-2 bg-black transition-all cursor-move ${
+                      index === 0 
+                        ? 'border-indigo-500 shadow-lg shadow-indigo-500/20' 
+                        : 'border-slate-800 hover:border-indigo-500'
+                    } ${draggedIndex === index ? 'opacity-50 scale-95' : ''}`}
                   >
-                    <Trash2 size={24} />
-                    <span className="text-xs font-bold">ELIMINAR</span>
-                  </button>
-                </div>
-              ))}
+                    {/* Badge de imagen principal */}
+                    {index === 0 && (
+                      <div className="absolute top-2 left-2 z-10 bg-indigo-500 text-white text-[8px] font-black px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                        <Star size={10} fill="white" />
+                        PRINCIPAL
+                      </div>
+                    )}
+                    
+                    {/* Badge de orden */}
+                    <div className="absolute top-2 right-2 z-10 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded-full">
+                      #{index + 1}
+                    </div>
+
+                    {/* Icono de drag */}
+                    <div className="absolute bottom-2 left-2 z-10 bg-black/70 text-slate-400 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                      <GripVertical size={14} />
+                    </div>
+                    
+                    <img 
+                      src={url} 
+                      alt={`Preview ${index + 1}`} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
+                    />
+                    
+                    {/* Overlay con acciones */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-end pb-4 gap-2">
+                      {/* Botón para establecer como principal (solo si no lo es) */}
+                      {index !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setAsPrimary(index)}
+                          className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-colors"
+                        >
+                          <Star size={12} />
+                          MARCAR COMO PRINCIPAL
+                        </button>
+                      )}
+                      
+                      {/* Botón de eliminar */}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                        ELIMINAR
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="border-2 border-dashed border-slate-800 rounded-xl p-8 text-center">
@@ -189,9 +272,16 @@ const ProductForm = ({ editingProduct, onCancel }: ProductFormProps) => {
           )}
           
           {/* Ayuda */}
-          <p className="text-slate-600 text-[10px] ml-2">
-            💡 La primera imagen será la imagen principal del producto
-          </p>
+          <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1">
+            <p className="text-slate-500 text-[10px] flex items-center gap-2">
+              <Star size={10} className="text-indigo-400" />
+              La primera imagen será la imagen principal del producto
+            </p>
+            <p className="text-slate-500 text-[10px] flex items-center gap-2">
+              <GripVertical size={10} className="text-indigo-400" />
+              Arrastra para reordenar o usa el botón "Marcar como principal"
+            </p>
+          </div>
         </div>
 
         <div className="space-y-1">
