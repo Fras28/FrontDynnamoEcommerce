@@ -82,13 +82,14 @@ const Navbar = ({ isLanding = false }: { isLanding?: boolean }) => {
               </button>
             )}
 
-            {isAdminUser && (
+            {/* NAVEGACIÓN ADMIN - VISIBLE SIEMPRE QUE SEA ADMIN (excepto en landing) */}
+            {isAdminUser && !isLanding && (
               <button
                 onClick={() => navigate(isAdminView ? '/catalogo' : '/admin')}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold text-xs uppercase transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold text-xs uppercase transition-all active:scale-95"
               >
-                {isCatalogView ? <Shield size={16} /> : <Store size={16} />}
-                <span>{isCatalogView ? "Admin" : "Tienda"}</span>
+                {isAdminView ? <Store size={16} /> : <Shield size={16} />}
+                <span>{isAdminView ? "Ir a Tienda" : "Ir a Admin"}</span>
               </button>
             )}
 
@@ -132,13 +133,37 @@ const Navbar = ({ isLanding = false }: { isLanding?: boolean }) => {
         {/* Menú Mobile Desplegable */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-slate-800 bg-slate-900/95 backdrop-blur-xl p-4 space-y-3">
+            {/* Si está en landing, mostrar opciones de navegación */}
             {isLanding && (
+              <>
+                <button
+                  onClick={() => { navigate('/catalogo'); setIsMenuOpen(false); }}
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs uppercase shadow-lg shadow-indigo-600/20"
+                >
+                  <Store size={18} />
+                  <span>Ir al Catálogo</span>
+                </button>
+                
+                {isAdminUser && (
+                  <button
+                    onClick={() => { navigate('/admin'); setIsMenuOpen(false); }}
+                    className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs uppercase"
+                  >
+                    <Shield size={18} />
+                    <span>Ir al Dashboard</span>
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* NAVEGACIÓN ADMIN MOBILE - visible solo si es admin y no está en landing */}
+            {isAdminUser && !isLanding && (
               <button
-                onClick={() => { navigate('/catalogo'); setIsMenuOpen(false); }}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs uppercase shadow-lg shadow-indigo-600/20"
+                onClick={() => { navigate(isAdminView ? '/catalogo' : '/admin'); setIsMenuOpen(false); }}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 font-bold text-xs uppercase"
               >
-                <Sparkles size={18} />
-                <span>Explorar Catálogo</span>
+                {isAdminView ? <Store size={18} /> : <Shield size={18} />}
+                <span>{isAdminView ? "Ir a Tienda" : "Ir a Admin"}</span>
               </button>
             )}
             

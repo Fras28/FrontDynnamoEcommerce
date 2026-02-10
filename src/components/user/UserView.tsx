@@ -157,11 +157,11 @@ const UserView = () => {
         {user && (
           <button
               onClick={() => setActiveTab('favorites')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-[10px] transition-all ${
                 activeTab === 'favorites' ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/20' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Heart size={18} /> FAVORITOS
+              <Heart size={14} /> FAVORITOS
             </button>
         )}
 

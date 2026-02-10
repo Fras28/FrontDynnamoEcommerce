@@ -157,12 +157,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ✅ Ruta Principal - Redirige según el rol del usuario */}
+        {/* ✅ Ruta Principal - Siempre muestra la Landing Page */}
         <Route
           path="/"
-          element={user ? (
-            user.role === Role.ADMIN ? <Navigate to="/admin" replace /> : <Navigate to="/catalogo" replace />
-          ) : <LandingPage />}
+          element={<LandingPage />}
         />
 
         {/* ✅ Login */}
