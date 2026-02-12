@@ -24,6 +24,9 @@ import { extractProductId } from './utils/urlUtils';
 import Navbar from './components/comon/Navbar';
 import PaymentInstructions from './components/cart/Paymentinstructions';
 import CheckoutPage from './pages/Checkoutpage';
+import OrderDetail from './orders/OrderDetail';
+import MyOrders from './orders/MyOrders';
+
 
 // Esto se verá cada vez que recargues la página en la consola
 console.log(
@@ -255,6 +258,46 @@ function App() {
             <PrivateRoute>
               <Layout response={globalResponse}>
                 <PaymentInstructions />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ Detalle de Orden - Usuario */}
+        <Route
+          path="/orders/:orderId"
+          element={
+            <PrivateRoute>
+              <Layout response={globalResponse}>
+                <OrderDetail/>
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ Mis Pedidos - Lista de pedidos del usuario */}
+        <Route
+          path="/my-orders"
+          element={
+            <PrivateRoute>
+              <Layout response={globalResponse}>
+                <MyOrders />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ Detalle de Orden - Admin */}
+        <Route
+          path="/admin/orders/:orderId"
+          element={
+            <PrivateRoute>
+              <Layout response={globalResponse}>
+                {user?.role === Role.ADMIN ? (
+                  <OrderDetail />
+                ) : (
+                  <Navigate to="/catalogo" replace />
+                )}
               </Layout>
             </PrivateRoute>
           }

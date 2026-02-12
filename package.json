@@ -1,7 +1,7 @@
 {
   "name": "Ecommerce Alquimystic",
   "private": true,
-  "version": "4.0.8",
+  "version": "4.1.8",
   "type": "module",
   "scripts": {
     "dev": "vite",

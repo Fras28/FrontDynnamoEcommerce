@@ -133,6 +133,7 @@ export interface Order {
   createdAt: string;
   // ✅ NUEVOS CAMPOS
   paymentMethod?: 'mercadopago' | 'transfer' | 'cash';
+  paymentStatus?: 'PENDING' | 'PENDING_CONFIRMATION' | 'APPROVED' | 'REJECTED';
   discount?: number;
   finalTotal?: number;
   items: {

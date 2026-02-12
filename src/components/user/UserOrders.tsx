@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/axios';
 import { 
   Package, 
@@ -9,10 +10,13 @@ import {
   Banknote, 
   DollarSign,
   Info,
-  Percent
+  Percent,
+  Eye
 } from 'lucide-react';
 
 const UserOrders = () => {
+  const navigate = useNavigate();
+  
   const { data: orders, isLoading } = useQuery({
     queryKey: ['my-orders'],
     queryFn: async () => {
@@ -54,6 +58,21 @@ const UserOrders = () => {
     }
   };
 
+  const getPaymentStatusInfo = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return { label: 'Pago Aprobado', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+      case 'PENDING':
+        return { label: 'Pago Pendiente', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
+      case 'PENDING_CONFIRMATION':
+        return { label: 'Confirmación Pendiente', color: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' };
+      case 'REJECTED':
+        return { label: 'Pago Rechazado', color: 'text-red-500 bg-red-500/10 border-red-500/20' };
+      default:
+        return { label: status, color: 'text-slate-500 bg-slate-500/10 border-slate-500/20' };
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-10">
@@ -85,7 +104,13 @@ const UserOrders = () => {
       ) : (
         orders?.map((order: any) => {
           const paymentInfo = getPaymentMethodInfo(order.paymentMethod);
+          const paymentStatusInfo = getPaymentStatusInfo(order.paymentStatus);
           const PaymentIcon = paymentInfo.icon;
+          
+          // ✅ CORREGIDO: Usar finalTotal en lugar de total para mostrar el monto con descuento
+          const displayTotal = order.finalTotal || order.total;
+          const originalTotal = order.total;
+          const discount = order.discount || 0;
           
           return (
             <div key={order.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden hover:border-slate-700 transition-all">
@@ -118,28 +143,36 @@ const UserOrders = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black text-slate-500 uppercase text-right mb-1">Total Pagado</p>
-                    <p className="text-2xl font-black text-white">${Number(order.total).toLocaleString()}</p>
-                    {order.discount && order.discount > 0 && (
+                    {/* ✅ CORREGIDO: Mostrar finalTotal */}
+                    <p className="text-2xl font-black text-white">${Number(displayTotal).toLocaleString()}</p>
+                    {discount > 0 && (
                       <div className="flex items-center justify-end gap-1 mt-1">
                         <Percent size={10} className="text-emerald-400" />
                         <p className="text-[10px] font-bold text-emerald-400">
-                          Ahorraste ${Number(order.discount).toLocaleString()}
+                          Ahorraste ${Number(discount).toLocaleString()}
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Método de pago */}
-                <div className={`border rounded-xl p-3 ${paymentInfo.color}`}>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-slate-950/30 rounded-lg">
-                      <PaymentIcon size={20} />
+                {/* Método de pago y estado */}
+                <div className="space-y-2">
+                  <div className={`border rounded-xl p-3 ${paymentInfo.color}`}>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-950/30 rounded-lg">
+                        <PaymentIcon size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-black uppercase mb-0.5">{paymentInfo.name}</p>
+                        <p className="text-[10px] font-medium opacity-80">{paymentInfo.description}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-black uppercase mb-0.5">{paymentInfo.name}</p>
-                      <p className="text-[10px] font-medium opacity-80">{paymentInfo.description}</p>
-                    </div>
+                  </div>
+
+                  {/* ✅ NUEVO: Estado del pago */}
+                  <div className={`border rounded-xl p-3 ${paymentStatusInfo.color}`}>
+                    <p className="text-xs font-black uppercase text-center">{paymentStatusInfo.label}</p>
                   </div>
                 </div>
               </div>
@@ -192,8 +225,9 @@ const UserOrders = () => {
                   </div>
                 </div>
 
-                {/* Información adicional según método de pago */}
-                {order.status === 'PENDING' && order.paymentMethod === 'transfer' && (
+                {/* Información adicional según método de pago y estado */}
+                {/* ✅ CORREGIDO: Usar paymentStatus en lugar de status para determinar si está pendiente */}
+                {order.paymentStatus === 'PENDING_CONFIRMATION' && order.paymentMethod === 'transfer' && (
                   <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                       <Info size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
@@ -207,14 +241,15 @@ const UserOrders = () => {
                   </div>
                 )}
 
-                {order.status === 'PENDING' && order.paymentMethod === 'cash' && (
+                {order.paymentStatus === 'PENDING_CONFIRMATION' && order.paymentMethod === 'cash' && (
                   <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                       <Info size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-xs font-black text-amber-400 uppercase mb-1">Pago al Recibir</p>
                         <p className="text-[11px] text-slate-300 leading-relaxed">
-                          Pagarás en efectivo cuando recibas tu pedido. Ten listo el monto exacto: ${Number(order.total).toLocaleString()}
+                          {/* ✅ CORREGIDO: Mostrar finalTotal */}
+                          Pagarás en efectivo cuando recibas tu pedido. Ten listo el monto exacto: ${Number(displayTotal).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -279,17 +314,17 @@ const UserOrders = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400 font-medium">Subtotal</span>
                     <span className="text-white font-bold">
-                      ${order.discount ? (Number(order.total) + Number(order.discount)).toLocaleString() : Number(order.total).toLocaleString()}
+                      ${Number(originalTotal).toLocaleString()}
                     </span>
                   </div>
-                  {order.discount && order.discount > 0 && (
+                  {discount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-emerald-400 font-medium flex items-center gap-1">
                         <Percent size={12} />
                         Descuento (10%)
                       </span>
                       <span className="text-emerald-400 font-bold">
-                        -${Number(order.discount).toLocaleString()}
+                        -${Number(discount).toLocaleString()}
                       </span>
                     </div>
                   )}
@@ -297,10 +332,20 @@ const UserOrders = () => {
                   <div className="flex justify-between">
                     <span className="text-white font-black text-lg">Total</span>
                     <span className="text-indigo-400 font-black text-2xl">
-                      ${Number(order.total).toLocaleString()}
+                      {/* ✅ CORREGIDO: Mostrar finalTotal */}
+                      ${Number(displayTotal).toLocaleString()}
                     </span>
                   </div>
                 </div>
+
+                {/* ✅ NUEVO: Botón para ver detalle */}
+                <button
+                  onClick={() => navigate(`/orders/${order.id}`)}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold uppercase text-sm transition-all flex items-center justify-center gap-2"
+                >
+                  <Eye size={16} />
+                  Ver Detalle Completo
+                </button>
               </div>
             </div>
           );
