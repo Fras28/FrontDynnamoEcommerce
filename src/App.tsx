@@ -9,24 +9,22 @@ import UserView from './components/user/UserView';
 import CartDrawer from './components/cart/CartDrawer';
 import PaymentSuccess from './components/cart/PaymentSuccess';
 
-
 import bgFungi from "./assets/bg-fungi.webp"
 import VersionBadge from './components/comon/VersionBadge';
 import { VERSION_INFO } from '@/utils/version';
 import ProductDetail from './components/product/Productdetail';
 import EmailConfirmation from './components/Auth/EmailConfirmation';
 
+// ✨ AMBOS DASHBOARDS - Puedes alternar entre ellos
 import DemoDashboard from './components/admin/demo/Demodashboard';
-import { useInactiveProducts, useProducts } from './hooks/useProducts';
-import { useAdminOrders, useUpdateOrderStatus } from './hooks/useOrders';
-import { useCategories } from './hooks/useCategories';
+import AdminDashboard from './components/admin/AdminDashboard';
+
 import { extractProductId } from './utils/urlUtils';
 import Navbar from './components/comon/Navbar';
 import PaymentInstructions from './components/cart/Paymentinstructions';
 import CheckoutPage from './pages/Checkoutpage';
 import OrderDetail from './orders/OrderDetail';
 import MyOrders from './orders/MyOrders';
-
 
 // Esto se verá cada vez que recargues la página en la consola
 console.log(
@@ -46,9 +44,7 @@ interface LayoutProps {
   response: ApiResponse | null;
 }
 
-const Layout = ({ children, response }: LayoutProps) => {
-  const { user } = useAuthStore();
-
+const Layout = ({ children }: LayoutProps) => {
   return (
     <div
       className="min-h-screen text-slate-200 p-3 sm:p-4 md:p-8 font-sans selection:bg-indigo-500/30 bg-cover bg-no-repeat relative overflow-x-hidden"
@@ -136,26 +132,75 @@ const ProductDetailWrapper = () => {
   return <ProductDetail />;
 };
 
-// Admin Dashboard Wrapper
+// ✨✨✨ Admin Dashboard Wrapper con Toggle ✨✨✨
 const AdminDashboardWrapper = () => {
+  // Estado para controlar qué dashboard mostrar
+  // Guarda en localStorage para persistir entre recargas
+  const [useDemoMode, setUseDemoMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('adminDashboardMode');
+    return saved === 'demo'; // Por defecto: modo real (false)
+  });
+
+  // Función para cambiar el modo
+  const toggleMode = () => {
+    const newMode = !useDemoMode;
+    setUseDemoMode(newMode);
+    localStorage.setItem('adminDashboardMode', newMode ? 'demo' : 'real');
+  };
+
   return (
-    <DemoDashboard
-      useProducts={useProducts}
-      useInactiveProducts={useInactiveProducts}
-      useAdminOrders={useAdminOrders}
-      useCategories={useCategories}
-      useUpdateOrderStatus={useUpdateOrderStatus}
-    />
+    <div className="space-y-4">
+      {/* ✨ Botón Toggle - Sticky en la parte superior */}
+      <div className="sticky top-4 z-50 flex justify-end">
+        <button
+          onClick={toggleMode}
+          className={`group relative px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-300 shadow-lg ${
+            useDemoMode
+              ? 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white'
+              : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            {useDemoMode ? (
+              <>
+                <span className="w-2 h-2 bg-orange-300 rounded-full animate-pulse"></span>
+                Modo demo activado
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 bg-emerald-300 rounded-full animate-pulse"></span>
+                Activar Demo
+              </>
+            )}
+          </span>
+          
+          {/* Tooltip */}
+          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            <p className="text-[10px] text-slate-300">
+              {useDemoMode 
+                ? '🎭 Usando datos de ejemplo. Click para usar datos reales.' 
+                : '✅ Usando datos reales del backend. Click para ver demo.'}
+            </p>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+          </div>
+        </button>
+      </div>
+
+      {/* ✨ Renderizado condicional del Dashboard */}
+      {useDemoMode ? (
+        // 🎭 MODO DEMO: Muestra DemoDashboard SIN PROPS
+        <DemoDashboard />
+      ) : (
+        // ✅ MODO REAL: Muestra AdminDashboard con datos reales
+        <AdminDashboard />
+      )}
+    </div>
   );
 };
 
 function App() {
   const { user } = useAuthStore();
   const [globalResponse, setGlobalResponse] = useState<ApiResponse | null>(null);
-
-  const handleResponse = (res: ApiResponse) => {
-    setGlobalResponse(res);
-  };
 
   return (
     <BrowserRouter>
@@ -185,7 +230,7 @@ function App() {
           }
         />
 
-        {/* ✅ Panel de Administración - /admin */}
+        {/* ✅ Panel de Administración - /admin CON TOGGLE */}
         <Route
           path="/admin"
           element={

@@ -107,9 +107,10 @@ const CheckoutPage = () => {
 
     setLoading(true);
     try {
-      const items = cart.map((item) => ({
-        productId: item.id,
-        quantity: item.quantity,
+      const items = cart?.map((item) => ({
+        productId: item?.id,
+        variantId: item?.selectedVariantId || undefined, // ✨ NUEVO
+        quantity: item?.quantity
       }));
 
       // ✅ CORRECCIÓN: Enviar datos completos al backend

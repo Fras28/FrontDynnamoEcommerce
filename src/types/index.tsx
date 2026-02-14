@@ -60,7 +60,86 @@ export interface CreateCategoryDto {
 
 export interface UpdateCategoryDto extends Partial<CreateCategoryDto> {}
 
-// ✅ CORREGIDO: Tipo para las imágenes del producto
+// ===================================================================
+// ✨ NUEVOS TIPOS PARA VARIANTES
+// ===================================================================
+
+// Talle
+export interface Size {
+  id: number;
+  name: string; // "XS", "S", "M", "L", "XL", etc.
+  order: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    variants: number;
+  };
+}
+
+export interface CreateSizeDto {
+  name: string;
+  order?: number;
+}
+
+export interface UpdateSizeDto extends Partial<CreateSizeDto> {
+  isActive?: boolean;
+}
+
+// Color
+export interface Color {
+  id: number;
+  name: string; // "Rojo", "Azul", "Negro", etc.
+  hexCode?: string | null; // "#FF0000"
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    variants: number;
+  };
+}
+
+export interface CreateColorDto {
+  name: string;
+  hexCode?: string;
+}
+
+export interface UpdateColorDto extends Partial<CreateColorDto> {
+  isActive?: boolean;
+}
+
+// Variante de Producto
+export interface ProductVariant {
+  id: number;
+  productId: number;
+  sizeId?: number | null;
+  colorId?: number | null;
+  size?: Size | null;
+  color?: Color | null;
+  stock: number;
+  sku?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVariantDto {
+  sizeId?: number;
+  colorId?: number;
+  stock: number;
+  sku?: string;
+}
+
+export interface UpdateVariantDto {
+  stock?: number;
+  sku?: string | null;
+  isActive?: boolean;
+}
+
+// ===================================================================
+// PRODUCT TYPES ACTUALIZADOS
+// ===================================================================
+
 export interface ProductImage {
   id: number;
   url: string;
@@ -70,13 +149,13 @@ export interface ProductImage {
   createdAt?: string;
 }
 
-// ✅ CORREGIDO: Product con imágenes múltiples
+// ✨ Product actualizado con variantes
 export interface Product {
   id: number;
   name: string;
   description?: string | null;
   price: number | string;
-  stock: number;
+  stock: number; // Stock base (solo relevante si hasVariants = false)
   isActive: boolean;
   categoryId?: number | null;
   category?: {
@@ -84,54 +163,77 @@ export interface Product {
     name: string;
     description?: string;
   };
-  images: ProductImage[]; // ✅ Array de objetos con id, url, etc.
+  images: ProductImage[];
+  
+  // ✨ NUEVO: Soporte de variantes
+  hasVariants: boolean;
+  variants?: ProductVariant[];
+  
+  // ✨ Campos para selección de variante (usado en UI/Cart)
+  selectedVariantId?: number;
+  selectedVariant?: ProductVariant;
+  
   createdAt: string;
   updatedAt: string;
 }
 
-// ✅ CORREGIDO: DTOs para crear/actualizar productos
+// ✨ DTO para crear producto actualizado
 export interface CreateProductDto {
   name: string;
   description?: string;
   price: number;
-  stock: number;
-  images: string[]; // ✅ Array de URLs
+  stock: number; // Stock base (se usa si NO tiene variantes)
+  images: string[]; // Array de URLs
   categoryId?: number;
+  
+  // ✨ NUEVO: Campos de variantes
+  hasVariants?: boolean;
+  variants?: Array<{
+    sizeId?: number;
+    colorId?: number;
+    stock: number;
+    sku?: string;
+  }>;
 }
 
-export interface UpdateProductDto extends Partial<CreateProductDto> {}
+export interface UpdateProductDto extends Partial<Omit<CreateProductDto, 'hasVariants' | 'variants'>> {
+  // No se permite cambiar hasVariants después de crear
+  // Las variantes se gestionan por separado
+}
 
-// Cart Types
+// ===================================================================
+// CART & ORDER TYPES ACTUALIZADOS
+// ===================================================================
+
+// ✨ Cart Item actualizado con variante seleccionada
 export interface CartItem extends Product {
   quantity: number;
+  selectedVariantId?: number; // ID de la variante seleccionada (si aplica)
+  selectedVariant?: ProductVariant; // Datos de la variante seleccionada
 }
 
-// Order Types
+// ✨ Order Item actualizado
 export interface OrderItem {
   productId: number;
+  variantId?: number; // ✨ NUEVO: ID de la variante si aplica
   quantity: number;
 }
 
-// ✅ ACTUALIZADO: CreateOrderDto con todos los campos necesarios
 export interface CreateOrderDto {
   items: OrderItem[];
-  // ✅ Total original (subtotal sin descuento)
   total: number;
-  // ✅ Método de pago seleccionado
   paymentMethod?: 'mercadopago' | 'transfer' | 'cash';
-  // ✅ Monto del descuento aplicado
   discount?: number;
-  // ✅ Total final después del descuento
   finalTotal?: number;
 }
 
+// ✨ Order actualizado con variantes
 export interface Order {
   id: number;
   userId: number;
   total: number;
   status: OrderStatus;
   createdAt: string;
-  // ✅ NUEVOS CAMPOS
   paymentMethod?: 'mercadopago' | 'transfer' | 'cash';
   paymentStatus?: 'PENDING' | 'PENDING_CONFIRMATION' | 'APPROVED' | 'REJECTED';
   discount?: number;
@@ -139,6 +241,8 @@ export interface Order {
   items: {
     id: number;
     productId: number;
+    variantId?: number | null; // ✨ NUEVO
+    variant?: ProductVariant | null; // ✨ NUEVO: Datos de la variante
     quantity: number;
     price: number;
     product?: {
@@ -156,7 +260,7 @@ export interface Order {
   };
 }
 
-// ✅ TIPOS DE MÉTRICAS
+// Métricas (sin cambios)
 export interface DashboardMetrics {
   totalRevenue: number;
   totalOrders: number;
@@ -207,7 +311,7 @@ export interface SalesByCategory {
   productsCount: number;
 }
 
-// Wrapper genérico
+// Wrappers
 export interface ApiResponseWrapper<T> {
   success: boolean;
   timestamp: string;
@@ -215,7 +319,6 @@ export interface ApiResponseWrapper<T> {
   data: T;
 }
 
-// API Response
 export interface ApiResponse<T = any> {
   success: boolean;
   timestamp: string;

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -26,6 +27,7 @@ import RelatedProducts from '../../components/product/RelatedProducts';
 import { extractProductId } from '../../utils/urlUtils';
 import { useAuthStore } from '../../store/authStore';
 import AuthRequiredModal from '../Auth/AuthRequiredModal';
+import { useSizes, useColors } from "../../hooks/Usesizesandcolors"
 
 
 const ProductDetail = () => {
@@ -40,6 +42,10 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  const { data: sizes } = useSizes();
+  const { data: colors } = useColors();
+  const [selectedSize, setSelectedSize] = useState<number | null>(null);
+  const [selectedColor, setSelectedColor] = useState<number | null>(null);
 
   const productId = slugWithId ? extractProductId(slugWithId) : null;
 
@@ -73,7 +79,7 @@ const ProductDetail = () => {
     },
     enabled: !!productId,
   });
-  
+
   // ✅ Toggle favorito con manejo manual
   const handleToggleFavorite = async () => {
     if (!user) {
@@ -81,15 +87,15 @@ const ProductDetail = () => {
       setShowAuthModal(true);
       return;
     }
-    
+
     if (!productId || isToggling) return;
 
     setIsToggling(true);
     try {
       const { data } = await api.post('/favorites/toggle', { productId });
-      
+
       setIsFavorite(data.action === 'added');
-      
+
       notifications.show({
         title: data.action === 'added' ? '¡Me encanta!' : 'Favorito eliminado',
         message: data.message,
@@ -174,17 +180,45 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    if (!user) {
-      setAuthAction('agregar este producto al carrito');
-      setShowAuthModal(true);
-      return;
+    // Si el producto tiene variantes, verificar selección
+    if (product.hasVariants) {
+      const selectedVariant = product.variants?.find(v => 
+        v.sizeId === selectedSize && v.colorId === selectedColor && v.isActive
+      );
+      
+      if (!selectedVariant) {
+        notifications.show({
+          title: 'Selección requerida',
+          message: 'Por favor selecciona un talle y/o color',
+          color: 'orange',
+        });
+        return;
+      }
+      
+      if (selectedVariant.stock === 0) {
+        notifications.show({
+          title: 'Sin stock',
+          message: 'Esta variante no tiene stock disponible',
+          color: 'red',
+        });
+        return;
+      }
+      
+      // Agregar con variante
+      addToCart({
+        ...product,
+        selectedVariantId: selectedVariant.id,
+        selectedVariant: selectedVariant,
+      }, 1);
+    } else {
+      // Producto sin variantes (comportamiento original)
+      addToCart(product, 1);
     }
     
-    addToCart(product, quantity);
     notifications.show({
-      title: '¡Agregado al carrito!',
-      message: `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'} de ${product.name}`,
-      color: 'green'
+      title: 'Producto agregado',
+      message: `"${product.name}" se agregó al carrito`,
+      color: 'green',
     });
   };
 
@@ -227,8 +261,8 @@ const ProductDetail = () => {
             onClick={handleToggleFavorite}
             disabled={isToggling}
             className={`p-2 sm:p-3 rounded-full border-2 transition-all ${isFavorite
-                ? 'bg-red-500 border-red-500 text-white'
-                : 'border-slate-700 text-slate-400 hover:border-red-500 hover:text-red-500'
+              ? 'bg-red-500 border-red-500 text-white'
+              : 'border-slate-700 text-slate-400 hover:border-red-500 hover:text-red-500'
               } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
             title={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
           >
@@ -243,7 +277,92 @@ const ProductDetail = () => {
           </button>
         </div>
       </div>
+      {/* ✨ SELECTOR DE VARIANTES */}
+      {product.hasVariants && product.variants && product.variants.length > 0 && (
+        <div className="space-y-4 mb-6">
+          {/* Talles */}
+          {sizes && sizes.length > 0 && (
+            <div>
+              <label className="text-sm font-bold text-white mb-2 block">Talle</label>
+              <div className="flex gap-2 flex-wrap">
+                {sizes.map(size => {
+                  const variantsWithSize = product.variants?.filter(v => v.sizeId === size.id && v.isActive);
+                  const hasStock = variantsWithSize && variantsWithSize.some(v => v.stock > 0);
 
+                  return (
+                    <button
+                      key={size.id}
+                      onClick={() => setSelectedSize(size.id)}
+                      disabled={!hasStock}
+                      className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${selectedSize === size.id
+                          ? 'bg-indigo-600 text-white'
+                          : hasStock
+                            ? 'bg-slate-800 text-white hover:bg-slate-700'
+                            : 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                        }`}
+                    >
+                      {size.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Colores */}
+          {colors && colors.length > 0 && (
+            <div>
+              <label className="text-sm font-bold text-white mb-2 block">Color</label>
+              <div className="flex gap-2 flex-wrap">
+                {colors.map(color => {
+                  const variantsWithColor = product.variants?.filter(v => v.colorId === color.id && v.isActive);
+                  const hasStock = variantsWithColor && variantsWithColor.some(v => v.stock > 0);
+
+                  return (
+                    <button
+                      key={color.id}
+                      onClick={() => setSelectedColor(color.id)}
+                      disabled={!hasStock}
+                      className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${selectedColor === color.id
+                          ? 'bg-indigo-600 text-white'
+                          : hasStock
+                            ? 'bg-slate-800 text-white hover:bg-slate-700'
+                            : 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                        }`}
+                    >
+                      {color.hexCode && (
+                        <div
+                          className="w-4 h-4 rounded-full border border-slate-600"
+                          style={{ backgroundColor: color.hexCode }}
+                        />
+                      )}
+                      {color.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Stock de variante seleccionada */}
+          {(() => {
+            const selectedVariant = product.variants?.find(v =>
+              v.sizeId === selectedSize && v.colorId === selectedColor && v.isActive
+            );
+
+            if (selectedVariant) {
+              return (
+                <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-3">
+                  <p className="text-xs text-slate-400">
+                    Stock disponible: <span className="text-white font-bold">{selectedVariant.stock}</span>
+                  </p>
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </div>
+      )}
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mt-2 sm:mt-4">
         {/* Lado Izquierdo: Galería de Imágenes */}
         <div className="space-y-3 sm:space-y-4 w-full">
@@ -303,8 +422,8 @@ const ProductDetail = () => {
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
                   className={`relative min-w-[70px] sm:min-w-[80px] h-[70px] sm:h-[80px] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === idx
-                      ? 'border-indigo-500 scale-105'
-                      : 'border-slate-800 opacity-50 hover:opacity-100 hover:border-slate-600'
+                    ? 'border-indigo-500 scale-105'
+                    : 'border-slate-800 opacity-50 hover:opacity-100 hover:border-slate-600'
                     }`}
                 >
                   <img
@@ -372,7 +491,94 @@ const ProductDetail = () => {
                 </button>
               </div>
             </div>
+{/* ✨ SELECTOR DE VARIANTES */}
+{product.hasVariants && product.variants && product.variants.length > 0 && (
+  <div className="space-y-4 mb-6">
+    {/* Talles */}
+    {sizes && sizes.length > 0 && (
+      <div>
+        <label className="text-sm font-bold text-white mb-2 block">Talle</label>
+        <div className="flex gap-2 flex-wrap">
+          {sizes.map(size => {
+            const variantsWithSize = product.variants?.filter(v => v.sizeId === size.id && v.isActive);
+            const hasStock = variantsWithSize && variantsWithSize.some(v => v.stock > 0);
+            
+            return (
+              <button
+                key={size.id}
+                onClick={() => setSelectedSize(size.id)}
+                disabled={!hasStock}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                  selectedSize === size.id
+                    ? 'bg-indigo-600 text-white'
+                    : hasStock
+                    ? 'bg-slate-800 text-white hover:bg-slate-700'
+                    : 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                }`}
+              >
+                {size.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    )}
 
+    {/* Colores */}
+    {colors && colors.length > 0 && (
+      <div>
+        <label className="text-sm font-bold text-white mb-2 block">Color</label>
+        <div className="flex gap-2 flex-wrap">
+          {colors.map(color => {
+            const variantsWithColor = product.variants?.filter(v => v.colorId === color.id && v.isActive);
+            const hasStock = variantsWithColor && variantsWithColor.some(v => v.stock > 0);
+            
+            return (
+              <button
+                key={color.id}
+                onClick={() => setSelectedColor(color.id)}
+                disabled={!hasStock}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
+                  selectedColor === color.id
+                    ? 'bg-indigo-600 text-white'
+                    : hasStock
+                    ? 'bg-slate-800 text-white hover:bg-slate-700'
+                    : 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                }`}
+              >
+                {color.hexCode && (
+                  <div 
+                    className="w-4 h-4 rounded-full border border-slate-600"
+                    style={{ backgroundColor: color.hexCode }}
+                  />
+                )}
+                {color.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    )}
+
+    {/* Stock de variante seleccionada */}
+    {(() => {
+      const selectedVariant = product.variants?.find(v => 
+        v.sizeId === selectedSize && v.colorId === selectedColor && v.isActive
+      );
+      
+      if (selectedVariant) {
+        return (
+          <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-3">
+            <p className="text-xs text-slate-400">
+              Stock disponible: <span className="text-white font-bold">{selectedVariant.stock}</span>
+            </p>
+          </div>
+        );
+      }
+      return null;
+    })()}
+  </div>
+)}
             <div className="space-y-3">
               <button
                 onClick={handleAddToCart}
@@ -394,7 +600,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Beneficios - Stack en mobile, grid en desktop */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-slate-800">
+            <div className="grid grid-cols-1 sm:grid-cols-1 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-slate-800">
               <div className="flex items-center gap-2 sm:gap-3 text-slate-400 justify-center sm:justify-start">
                 <Truck size={16} className="sm:w-[18px] sm:h-[18px] text-indigo-500 flex-shrink-0" />
                 <span className="text-[9px] sm:text-[10px] font-bold whitespace-nowrap">ENVÍO GRATIS superando los $90.000</span>

@@ -1,605 +1,746 @@
 import { useState } from 'react';
-import { Loader2, Package, ClipboardList, BarChart3, TrendingUp, Tag, Archive, PieChart, Eye, EyeOff } from 'lucide-react';
-import ProductsTable from '../categorias/ProductsTable';
-import ProductForm from '../categorias/ProductForm';
-import CategoryForm from '../categorias/Categoryform';
-import CategoriesTable from '../categorias/CategoriesTable';
+import { 
+  Package, ClipboardList, Tag, 
+  PieChart, Ruler, Palette, Plus, Archive 
+} from 'lucide-react';
+
+// Tablas originales
+import ProductsTable from '../adminforms/ProductsTable';
+import CategoriesTable from '../adminforms/CategoriesTable';
+import SizesTable from '../adminforms/Sizestable';
+import ColorsTable from '../adminforms/Colorstable';
 import OrdersTable from '../OrdersTable';
-import MetricsDashboard from '../MetricsDashboard';
+
+// Métricas Demo
 import DemoMetricsKPIs from './Demometricskpis';
 import DemoMetricsCharts from './Demometricscharts';
 
-
 // ==========================================
-// MOCK DATA - Datos ficticios para la demo
+// MOCK DATA COMPLETO Y CORRECTAMENTE TIPADO
 // ==========================================
 
+const now = new Date().toISOString();
+
+// Categorías Mock
 const mockCategories = [
-  { id: 1, name: 'Electrónica', description: 'Dispositivos y accesorios electrónicos', createdAt: '2024-01-15' },
-  { id: 2, name: 'Ropa', description: 'Indumentaria y accesorios de moda', createdAt: '2024-01-20' },
-  { id: 3, name: 'Hogar', description: 'Artículos para el hogar y decoración', createdAt: '2024-02-01' },
-  { id: 4, name: 'Deportes', description: 'Equipamiento deportivo y fitness', createdAt: '2024-02-10' },
-  { id: 5, name: 'Libros', description: 'Libros y material de lectura', createdAt: '2024-02-15' },
-];
-
-const mockProducts = [
-  {
-    id: 1,
-    name: 'Auriculares Bluetooth Pro',
-    description: 'Auriculares inalámbricos con cancelación de ruido activa',
-    price: 15999,
-    stock: 45,
-    imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-    categoryId: 1,
-    category: { name: 'Electrónica' },
-    isActive: true,
+  { 
+    id: 1, 
+    name: 'Electrónica', 
+    description: 'Gadgets y tecnología',
+    createdAt: now,
+    updatedAt: now,
+    _count: { products: 12 }
   },
-  {
-    id: 2,
-    name: 'Smartwatch Fitness',
-    description: 'Reloj inteligente con monitor de actividad física',
-    price: 24999,
-    stock: 28,
-    imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-    categoryId: 1,
-    category: { name: 'Electrónica' },
-    isActive: true,
+  { 
+    id: 2, 
+    name: 'Ropa', 
+    description: 'Moda y textiles',
+    createdAt: now,
+    updatedAt: now,
+    _count: { products: 25 }
   },
-  {
-    id: 3,
-    name: 'Remera Premium Cotton',
-    description: 'Remera 100% algodón en diferentes colores',
-    price: 4500,
-    stock: 120,
-    imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-    categoryId: 2,
-    category: { name: 'Ropa' },
-    isActive: true,
+  { 
+    id: 3, 
+    name: 'Deportes', 
+    description: 'Equipamiento deportivo',
+    createdAt: now,
+    updatedAt: now,
+    _count: { products: 8 }
   },
-  {
-    id: 4,
-    name: 'Zapatillas Running Elite',
-    description: 'Zapatillas profesionales para corredores',
-    price: 32999,
-    stock: 35,
-    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-    categoryId: 4,
-    category: { name: 'Deportes' },
-    isActive: true,
-  },
-  {
-    id: 5,
-    name: 'Lámpara LED Inteligente',
-    description: 'Lámpara con control por app y cambio de color',
-    price: 8999,
-    stock: 67,
-    imageUrl: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=400&h=400&fit=crop',
-    categoryId: 3,
-    category: { name: 'Hogar' },
-    isActive: true,
-  },
-  {
-    id: 6,
-    name: 'Mochila Urbana Premium',
-    description: 'Mochila resistente al agua con puerto USB',
-    price: 12500,
-    stock: 52,
-    imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop',
-    categoryId: 4,
-    category: { name: 'Deportes' },
-    isActive: true,
-  },
-  {
-    id: 7,
-    name: 'Mouse Gaming RGB',
-    description: 'Mouse ergonómico para gaming con 7 botones',
-    price: 9800,
-    stock: 88,
-    imageUrl: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=400&fit=crop',
-    categoryId: 1,
-    category: { name: 'Electrónica' },
-    isActive: true,
-  },
-  {
-    id: 8,
-    name: 'Libro: Emprendimiento Digital',
-    description: 'Guía completa para emprendedores modernos',
-    price: 5500,
-    stock: 95,
-    imageUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop',
-    categoryId: 5,
-    category: { name: 'Libros' },
-    isActive: true,
+  { 
+    id: 4, 
+    name: 'Hogar', 
+    description: 'Decoración y muebles',
+    createdAt: now,
+    updatedAt: now,
+    _count: { products: 15 }
   },
 ];
 
-const mockInactiveProducts = [
-  {
-    id: 100,
-    name: 'Producto Descontinuado',
-    description: 'Este producto ya no está disponible',
-    price: 5000,
-    stock: 0,
-    imageUrl: 'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&h=400&fit=crop',
-    categoryId: 1,
-    category: { name: 'Electrónica' },
+// Talles Mock
+const mockSizes = [
+  { 
+    id: 1, 
+    name: 'XS', 
+    order: 0,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    _count: { variants: 15 }
+  },
+  { 
+    id: 2, 
+    name: 'S', 
+    order: 1,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    _count: { variants: 28 }
+  },
+  { 
+    id: 3, 
+    name: 'M', 
+    order: 2,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    _count: { variants: 42 }
+  },
+  { 
+    id: 4, 
+    name: 'L', 
+    order: 3,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    _count: { variants: 35 }
+  },
+  { 
+    id: 5, 
+    name: 'XL', 
+    order: 4,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    _count: { variants: 22 }
+  },
+  { 
+    id: 6, 
+    name: 'XXL', 
+    order: 5,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    _count: { variants: 12 }
+  },
+];
+
+// Talles Inactivos Mock
+const mockInactiveSizes = [
+  { 
+    id: 7, 
+    name: 'XXXL', 
+    order: 6,
     isActive: false,
+    createdAt: now,
+    updatedAt: now,
+    _count: { variants: 5 }
   },
 ];
 
+// Colores Mock
+const mockColors = [
+  { 
+    id: 1, 
+    name: 'Negro', 
+    hexCode: '#000000',
+    isActive: true, 
+    createdAt: now, 
+    updatedAt: now,
+    _count: { variants: 45 }
+  },
+  { 
+    id: 2, 
+    name: 'Blanco', 
+    hexCode: '#FFFFFF',
+    isActive: true, 
+    createdAt: now, 
+    updatedAt: now,
+    _count: { variants: 38 }
+  },
+  { 
+    id: 3, 
+    name: 'Rojo', 
+    hexCode: '#EF4444',
+    isActive: true, 
+    createdAt: now, 
+    updatedAt: now,
+    _count: { variants: 22 }
+  },
+  { 
+    id: 4, 
+    name: 'Azul', 
+    hexCode: '#3B82F6',
+    isActive: true, 
+    createdAt: now, 
+    updatedAt: now,
+    _count: { variants: 31 }
+  },
+  { 
+    id: 5, 
+    name: 'Verde', 
+    hexCode: '#22C55E',
+    isActive: true, 
+    createdAt: now, 
+    updatedAt: now,
+    _count: { variants: 18 }
+  },
+  { 
+    id: 6, 
+    name: 'Gris', 
+    hexCode: '#6B7280',
+    isActive: true, 
+    createdAt: now, 
+    updatedAt: now,
+    _count: { variants: 25 }
+  },
+];
+
+// Colores Inactivos Mock
+const mockInactiveColors = [
+  { 
+    id: 7, 
+    name: 'Naranja Brillante', 
+    hexCode: '#FF6B00',
+    isActive: false, 
+    createdAt: now, 
+    updatedAt: now,
+    _count: { variants: 3 }
+  },
+];
+
+// Productos Mock
+const mockProducts = [
+  { 
+    id: 1, 
+    name: 'Auriculares Bluetooth Pro', 
+    description: 'Auriculares con cancelación de ruido',
+    price: 15999, 
+    stock: 45, 
+    categoryId: 1,
+    category: { id: 1, name: 'Electrónica', description: 'Gadgets y tecnología' }, 
+    isActive: true, 
+    images: [
+      { id: 1, url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', productId: 1, isPrimary: true, order: 0 }
+    ],
+    hasVariants: false,
+    variants: [],
+    createdAt: now,
+    updatedAt: now
+  },
+  { 
+    id: 2, 
+    name: 'Smartwatch Fitness', 
+    description: 'Reloj inteligente con monitor de actividad',
+    price: 24999, 
+    stock: 32, 
+    categoryId: 1,
+    category: { id: 1, name: 'Electrónica', description: 'Gadgets y tecnología' }, 
+    isActive: true, 
+    images: [
+      { id: 2, url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400', productId: 2, isPrimary: true, order: 0 }
+    ],
+    hasVariants: false,
+    variants: [],
+    createdAt: now,
+    updatedAt: now
+  },
+  { 
+    id: 3, 
+    name: 'Remera Deportiva', 
+    description: 'Remera transpirable para running',
+    price: 4999, 
+    stock: 0,
+    categoryId: 2,
+    category: { id: 2, name: 'Ropa', description: 'Moda y textiles' }, 
+    isActive: true, 
+    images: [
+      { id: 3, url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', productId: 3, isPrimary: true, order: 0 }
+    ],
+    hasVariants: true,
+    variants: [
+      { id: 1, productId: 3, sizeId: 2, colorId: 1, stock: 10, isActive: true, createdAt: now, updatedAt: now },
+      { id: 2, productId: 3, sizeId: 3, colorId: 1, stock: 15, isActive: true, createdAt: now, updatedAt: now },
+      { id: 3, productId: 3, sizeId: 2, colorId: 2, stock: 8, isActive: true, createdAt: now, updatedAt: now },
+    ],
+    createdAt: now,
+    updatedAt: now
+  },
+  { 
+    id: 4, 
+    name: 'Zapatillas Running Elite', 
+    description: 'Zapatillas de alto rendimiento',
+    price: 32999, 
+    stock: 0,
+    categoryId: 3,
+    category: { id: 3, name: 'Deportes', description: 'Equipamiento deportivo' }, 
+    isActive: true, 
+    images: [
+      { id: 4, url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', productId: 4, isPrimary: true, order: 0 }
+    ],
+    hasVariants: true,
+    variants: [
+      { id: 4, productId: 4, sizeId: 2, colorId: 4, stock: 5, isActive: true, createdAt: now, updatedAt: now },
+      { id: 5, productId: 4, sizeId: 3, colorId: 4, stock: 12, isActive: true, createdAt: now, updatedAt: now },
+      { id: 6, productId: 4, sizeId: 4, colorId: 1, stock: 8, isActive: true, createdAt: now, updatedAt: now },
+    ],
+    createdAt: now,
+    updatedAt: now
+  },
+  { 
+    id: 5, 
+    name: 'Lámpara LED Inteligente', 
+    description: 'Lámpara regulable con control remoto',
+    price: 8999, 
+    stock: 22, 
+    categoryId: 4,
+    category: { id: 4, name: 'Hogar', description: 'Decoración y muebles' }, 
+    isActive: true, 
+    images: [
+      { id: 5, url: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=400', productId: 5, isPrimary: true, order: 0 }
+    ],
+    hasVariants: false,
+    variants: [],
+    createdAt: now,
+    updatedAt: now
+  },
+];
+
+// Productos Inactivos Mock
+const mockInactiveProducts = [
+  { 
+    id: 6, 
+    name: 'Mouse Inalámbrico (Descontinuado)', 
+    description: 'Modelo anterior',
+    price: 2999, 
+    stock: 0, 
+    categoryId: 1,
+    category: { id: 1, name: 'Electrónica', description: 'Gadgets y tecnología' }, 
+    isActive: false, 
+    images: [
+      { id: 6, url: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400', productId: 6, isPrimary: true, order: 0 }
+    ],
+    hasVariants: false,
+    variants: [],
+    createdAt: now,
+    updatedAt: now
+  },
+];
+
+// Órdenes Mock
 const mockOrders = [
   {
-    id: 1001,
+    id: 1,
+    userId: 1,
+    total: 48998,
     status: 'COMPLETED',
-    total: 56498,
-    createdAt: '2024-02-02T10:30:00',
-    user: {
-      email: 'juan.perez@email.com',
-      phone: '+5492914567890',
-      address: 'Av. Alem 1234, Bahía Blanca, Buenos Aires',
-    },
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    paymentMethod: 'mercadopago',
+    paymentStatus: 'APPROVED',
+    discount: 0,
+    finalTotal: 48998,
     items: [
       {
         id: 1,
-        quantity: 1,
+        productId: 1,
+        variantId: null,
+        quantity: 2,
+        price: 15999,
         product: {
-          name: 'Smartwatch Fitness',
-          imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-        },
+          id: 1,
+          name: 'Auriculares Bluetooth Pro',
+          images: [{ url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400' }]
+        }
       },
       {
         id: 2,
+        productId: 5,
+        variantId: null,
         quantity: 2,
+        price: 8999,
         product: {
-          name: 'Auriculares Bluetooth Pro',
-          imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-        },
-      },
+          id: 5,
+          name: 'Lámpara LED Inteligente',
+          images: [{ url: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=400' }]
+        }
+      }
     ],
+    user: {
+      id: 1,
+      email: 'cliente1@email.com',
+      phone: '+54 9 11 1234-5678',
+      address: 'Av. Corrientes 1234, CABA'
+    }
   },
   {
-    id: 1002,
+    id: 2,
+    userId: 2,
+    total: 32999,
     status: 'SHIPPED',
-    total: 37499,
-    createdAt: '2024-02-01T15:45:00',
-    user: {
-      email: 'maria.garcia@email.com',
-      phone: '+5492915678901',
-      address: 'Calle Brown 567, Bahía Blanca, Buenos Aires',
-    },
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+    paymentMethod: 'transfer',
+    paymentStatus: 'APPROVED',
+    discount: 0,
+    finalTotal: 32999,
     items: [
       {
         id: 3,
+        productId: 4,
+        variantId: 5,
         quantity: 1,
+        price: 32999,
         product: {
+          id: 4,
           name: 'Zapatillas Running Elite',
-          imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
+          images: [{ url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400' }]
         },
-      },
+        variant: {
+          id: 5,
+          productId: 4,
+          sizeId: 3,
+          colorId: 4,
+          stock: 12,
+          isActive: true,
+          createdAt: now,
+          updatedAt: now,
+          size: { id: 3, name: 'M', order: 2, isActive: true, createdAt: now, updatedAt: now },
+          color: { id: 4, name: 'Azul', hexCode: '#3B82F6', isActive: true, createdAt: now, updatedAt: now }
+        }
+      }
+    ],
+    user: {
+      id: 2,
+      email: 'cliente2@email.com',
+      phone: '+54 9 11 9876-5432',
+      address: 'Calle Falsa 123, Buenos Aires'
+    }
+  },
+  {
+    id: 3,
+    userId: 3,
+    total: 9998,
+    status: 'PENDING',
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    paymentMethod: 'cash',
+    paymentStatus: 'PENDING',
+    discount: 1000,
+    finalTotal: 8998,
+    items: [
       {
         id: 4,
-        quantity: 1,
+        productId: 3,
+        variantId: 2,
+        quantity: 2,
+        price: 4999,
         product: {
-          name: 'Remera Premium Cotton',
-          imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+          id: 3,
+          name: 'Remera Deportiva',
+          images: [{ url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400' }]
         },
-      },
+        variant: {
+          id: 2,
+          productId: 3,
+          sizeId: 3,
+          colorId: 1,
+          stock: 15,
+          isActive: true,
+          createdAt: now,
+          updatedAt: now,
+          size: { id: 3, name: 'M', order: 2, isActive: true, createdAt: now, updatedAt: now },
+          color: { id: 1, name: 'Negro', hexCode: '#000000', isActive: true, createdAt: now, updatedAt: now }
+        }
+      }
     ],
-  },
-  {
-    id: 1003,
-    status: 'DELIVERED',
-    total: 21499,
-    createdAt: '2024-01-30T09:20:00',
     user: {
-      email: 'carlos.martinez@email.com',
-      phone: '+5492916789012',
-      address: 'San Martín 890, Bahía Blanca, Buenos Aires',
-    },
-    items: [
-      {
-        id: 5,
-        quantity: 1,
-        product: {
-          name: 'Lámpara LED Inteligente',
-          imageUrl: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=400&h=400&fit=crop',
-        },
-      },
-      {
-        id: 6,
-        quantity: 1,
-        product: {
-          name: 'Mochila Urbana Premium',
-          imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop',
-        },
-      },
-    ],
-  },
-  {
-    id: 1004,
-    status: 'COMPLETED',
-    total: 25300,
-    createdAt: '2024-02-02T14:10:00',
-    user: {
-      email: 'lucia.fernandez@email.com',
-      phone: '+5492917890123',
-      address: 'Belgrano 2345, Bahía Blanca, Buenos Aires',
-    },
-    items: [
-      {
-        id: 7,
-        quantity: 1,
-        product: {
-          name: 'Mouse Gaming RGB',
-          imageUrl: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=400&fit=crop',
-        },
-      },
-      {
-        id: 8,
-        quantity: 1,
-        product: {
-          name: 'Auriculares Bluetooth Pro',
-          imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-        },
-      },
-    ],
-  },
-  {
-    id: 1005,
-    status: 'PENDING',
-    total: 18000,
-    createdAt: '2024-02-02T16:30:00',
-    user: {
-      email: 'roberto.lopez@email.com',
-      phone: '+5492918901234',
-      address: 'Rivadavia 456, Bahía Blanca, Buenos Aires',
-    },
-    items: [
-      {
-        id: 9,
-        quantity: 4,
-        product: {
-          name: 'Remera Premium Cotton',
-          imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-        },
-      },
-    ],
-  },
+      id: 3,
+      email: 'cliente3@email.com',
+      phone: '+54 9 11 5555-1234',
+      address: 'San Martín 456, La Plata'
+    }
+  }
 ];
 
-
 // ==========================================
-// COMPONENTE PRINCIPAL CON TOGGLE DEMO
+// COMPONENTE DASHBOARD (DEMO)
 // ==========================================
 
-interface DemoDashboardProps {
-  useProducts: any;
-  useInactiveProducts: any;
-  useAdminOrders: any;
-  useCategories: any;
-  useUpdateOrderStatus: any;
-}
+// ⚠️ Este componente NO recibe props - es completamente standalone
+const DemoDashboard = () => {
+  const [activeTab, setActiveTab] = useState<'metrics' | 'inventory' | 'orders' | 'categories' | 'sizes' | 'colors' | 'inactive'>('metrics');
 
-const DemoDashboard = ({
-  useProducts: realUseProducts,
-  useInactiveProducts: realUseInactiveProducts,
-  useAdminOrders: realUseAdminOrders,
-  useCategories: realUseCategories,
-  useUpdateOrderStatus,
-}: DemoDashboardProps) => {
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'inventory' | 'orders' | 'categories' | 'inactive'>('metrics');
-  const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
-
-  // ✅ SIEMPRE llamar a los hooks reales (regla de React)
-  const realProducts = realUseProducts();
-  const realInactiveProducts = realUseInactiveProducts();
-  const realOrders = realUseAdminOrders();
-  const realCategories = realUseCategories();
-  const updateStatusMutation = useUpdateOrderStatus();
-
-  // ✅ Decidir qué datos usar según el modo
-  const products = isDemoMode ? mockProducts : realProducts.data;
-  const loadingProducts = isDemoMode ? false : realProducts.isLoading;
-  
-  const inactiveProducts = isDemoMode ? mockInactiveProducts : realInactiveProducts.data;
-  const loadingInactive = isDemoMode ? false : realInactiveProducts.isLoading;
-  
-  const orders = isDemoMode ? mockOrders : realOrders.data;
-  const loadingOrders = isDemoMode ? false : realOrders.isLoading;
-  
-  const categories = isDemoMode ? mockCategories : realCategories.data;
-  const loadingCategories = isDemoMode ? false : realCategories.isLoading;
-
-  const handleEdit = (product: any) => {
-    if (isDemoMode) {
-      alert('⚠️ Modo Demo: Las ediciones no se guardarán');
-      return;
-    }
-    setEditingProduct(product);
-    setActiveTab('inventory');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleReadOnlyAction = () => {
+    alert('⚠️ Modo Demo: Las funciones de escritura (crear/editar/eliminar) están deshabilitadas.\n\nEste es un entorno de demostración con datos ficticios.');
   };
 
-  const handleEditCategory = (category: any) => {
-    if (isDemoMode) {
-      alert('⚠️ Modo Demo: Las ediciones no se guardarán');
-      return;
-    }
-    setEditingCategory(category);
-    setActiveTab('categories');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleUpdateStatus = (id: number, status: string) => {
-    if (isDemoMode) {
-      alert('⚠️ Modo Demo: Los cambios no se aplicarán');
-      return;
-    }
-    updateStatusMutation.mutate({ id, status });
-  };
-
-  const toggleDemoMode = () => {
-    setIsDemoMode(!isDemoMode);
-    setActiveTab('metrics'); // Volver a métricas al cambiar modo
-  };
-
-  if (loadingProducts || loadingOrders || loadingCategories) {
-    return (
-      <div className="flex flex-col items-center justify-center py-40">
-        <div className="relative">
-          <Loader2 className="animate-spin text-indigo-500 relative z-10" size={50} />
-          <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full"></div>
+  // Header visual para los formularios bloqueados
+  const MockFormHeader = ({ title, icon: Icon }: { title: string, icon: any }) => (
+    <div className="bg-slate-900/80 border border-slate-800 p-6 sm:p-8 rounded-2xl sm:rounded-[2.5rem] space-y-6">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="p-3 bg-indigo-500/10 rounded-2xl">
+          <Icon className="text-indigo-400" size={24} />
         </div>
-        <p className="text-slate-500 font-black uppercase italic tracking-widest mt-6 animate-pulse text-xs">
-          Accediendo al sistema...
-        </p>
+        <div>
+          <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight">{title}</h3>
+          <p className="text-xs text-slate-500 mt-1">Modo solo lectura</p>
+        </div>
       </div>
-    );
-  }
+      
+      <div className="space-y-4 opacity-30 pointer-events-none">
+        <div className="h-10 sm:h-12 bg-slate-800 rounded-xl w-full animate-pulse" />
+        <div className="h-10 sm:h-12 bg-slate-800 rounded-xl w-full animate-pulse" />
+        <div className="h-24 sm:h-32 bg-slate-800 rounded-xl w-full animate-pulse" />
+      </div>
+      
+      <button className="w-full py-3 sm:py-4 bg-slate-800 text-slate-500 rounded-xl font-black uppercase text-xs tracking-widest cursor-not-allowed flex items-center justify-center gap-2">
+        🔒 Solo Lectura - Modo Demo
+      </button>
+    </div>
+  );
+
+  // Separar activos e inactivos
+  const activeSizes = mockSizes;
+  const inactiveSizes = mockInactiveSizes;
+  const activeColors = mockColors;
+  const inactiveColors = mockInactiveColors;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Toggle Demo Mode Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={toggleDemoMode}
-          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest shadow-lg ${
-            isDemoMode
-              ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-yellow-600/20'
-              : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-          }`}
-        >
-          {isDemoMode ? <EyeOff size={14} /> : <Eye size={14} />}
-          {isDemoMode ? 'Modo Demo Activo' : 'Activar Demo'}
-        </button>
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700 overflow-x-hidden">
+      
+      {/* Selector de Tabs - Optimizado para mobile */}
+      <div className="flex flex-wrap gap-2 sm:gap-3 p-2 bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl sm:rounded-[2rem] w-full sm:w-fit overflow-x-auto scrollbar-hide">
+        {[
+          { id: 'metrics', label: 'Métricas', icon: PieChart, color: 'bg-indigo-600' },
+          { id: 'inventory', label: 'Productos', icon: Package, color: 'bg-blue-600' },
+          { id: 'categories', label: 'Categorías', icon: Tag, color: 'bg-purple-600' },
+          { id: 'sizes', label: 'Talles', icon: Ruler, color: 'bg-cyan-600' },
+          { id: 'colors', label: 'Colores', icon: Palette, color: 'bg-pink-600' },
+          { id: 'orders', label: 'Ventas', icon: ClipboardList, color: 'bg-emerald-600' },
+          { id: 'inactive', label: 'Inactivos', icon: Archive, color: 'bg-orange-600' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl sm:rounded-[1.5rem] text-[9px] sm:text-[10px] font-black transition-all uppercase tracking-wider sm:tracking-widest flex-shrink-0 ${
+              activeTab === tab.id ? `${tab.color} text-white shadow-lg` : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+            }`}
+          >
+            <tab.icon size={14} className="flex-shrink-0" /> 
+            <span className="hidden sm:inline">{tab.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Demo Notice Banner */}
-      {isDemoMode && (
-        <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/30 rounded-2xl p-6 animate-pulse">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-yellow-500/20 rounded-xl">
-              <Eye className="text-yellow-400" size={24} />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-black text-yellow-400 uppercase tracking-tight mb-2">
-                🎭 Modo Demostración Activo
-              </h3>
-              <p className="text-sm text-slate-300">
-                Estás viendo datos ficticios para explorar el dashboard. Todos los productos, órdenes y métricas son ejemplos.
-                Las ediciones y cambios <strong>no se guardarán</strong>.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-4 p-1.5 bg-slate-900 border border-slate-800 rounded-[2rem] w-fit mx-auto md:mx-0">
-        <button
-          onClick={() => setActiveTab('metrics')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest ${
-            activeTab === 'metrics'
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-600/20'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <PieChart size={14} /> Métricas
-        </button>
-
-        <button
-          onClick={() => setActiveTab('inventory')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest ${
-            activeTab === 'inventory'
-              ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <Package size={14} /> Inventario
-        </button>
-
-        <button
-          onClick={() => setActiveTab('categories')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest ${
-            activeTab === 'categories'
-              ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <Tag size={14} /> Categorías
-        </button>
-
-        <button
-          onClick={() => setActiveTab('inactive')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest relative ${
-            activeTab === 'inactive'
-              ? 'bg-orange-600 text-white shadow-xl shadow-orange-600/20'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <Archive size={14} /> Inactivos
-          {inactiveProducts && inactiveProducts.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">
-              {inactiveProducts.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('orders')}
-          className={`flex items-center gap-2 px-6 py-3 rounded-[1.5rem] text-[10px] font-black transition-all uppercase tracking-widest ${
-            activeTab === 'orders'
-              ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-600/20'
-              : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <ClipboardList size={14} /> Ventas
-        </button>
-      </div>
-
-      {/* Content */}
-      {activeTab === 'metrics' ? (
-        isDemoMode ? (
-          <>
+      {/* Contenido según el tab activo */}
+      <div className="mt-8">
+        {activeTab === 'metrics' && (
+          <div className="space-y-8">
             <DemoMetricsKPIs />
             <DemoMetricsCharts />
-          </>
-        ) : (
-          <MetricsDashboard />
-        )
-      ) : activeTab === 'inventory' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-5 lg:sticky lg:top-8">
-            {isDemoMode ? (
-              <div className="bg-slate-900/50 border border-yellow-500/20 p-12 rounded-[2rem] text-center">
-                <Eye className="mx-auto text-yellow-500 mb-4" size={48} />
-                <h3 className="text-lg font-black text-yellow-400 uppercase tracking-widest mb-2">
-                  Modo Demo
-                </h3>
-                <p className="text-sm text-slate-400">
-                  La edición está deshabilitada en modo demostración
-                </p>
-              </div>
-            ) : (
-              <ProductForm editingProduct={editingProduct} onCancel={() => setEditingProduct(null)} />
-            )}
           </div>
-          <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between mb-2 px-2">
-              <div className="flex items-center gap-3">
-                <BarChart3 className="text-indigo-500" size={20} />
-                <h3 className="text-xs font-black text-white uppercase tracking-widest">Control de Existencias</h3>
-              </div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase italic">
-                {products?.length || 0} items activos
-              </span>
-            </div>
-            <ProductsTable products={products || []} onEdit={handleEdit} />
-          </div>
-        </div>
-      ) : activeTab === 'categories' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-5 lg:sticky lg:top-8">
-            {isDemoMode ? (
-              <div className="bg-slate-900/50 border border-yellow-500/20 p-12 rounded-[2rem] text-center">
-                <Eye className="mx-auto text-yellow-500 mb-4" size={48} />
-                <h3 className="text-lg font-black text-yellow-400 uppercase tracking-widest mb-2">
-                  Modo Demo
-                </h3>
-                <p className="text-sm text-slate-400">
-                  La edición está deshabilitada en modo demostración
-                </p>
-              </div>
-            ) : (
-              <CategoryForm editingCategory={editingCategory} onCancel={() => setEditingCategory(null)} />
-            )}
-          </div>
-          <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between mb-2 px-2">
-              <div className="flex items-center gap-3">
-                <Tag className="text-purple-500" size={20} />
-                <h3 className="text-xs font-black text-white uppercase tracking-widest">Gestión de Categorías</h3>
-              </div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase italic">
-                {categories?.length || 0} categorías
-              </span>
-            </div>
-            <CategoriesTable categories={categories || []} onEdit={handleEditCategory} />
-          </div>
-        </div>
-      ) : activeTab === 'inactive' ? (
-        <div className="space-y-6">
-          <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-orange-500/20 rounded-xl">
-                <Archive className="text-orange-400" size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-black text-white uppercase tracking-tight">
-                  Productos Desactivados
-                </h3>
-                <p className="text-sm text-slate-400 mt-1">
-                  Estos productos fueron eliminados pero se mantienen en el sistema porque tienen órdenes asociadas.
-                  Puedes reactivarlos en cualquier momento.
-                </p>
-                <div className="flex gap-4 mt-4 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                    <span className="text-slate-400 font-bold">
-                      {inactiveProducts?.length || 0} productos inactivos
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-                    <span className="text-slate-400 font-bold">
-                      {products?.length || 0} productos activos
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        )}
 
-          {loadingInactive ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="animate-spin text-orange-500" size={32} />
+        {activeTab === 'inventory' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            <div className="lg:col-span-4 lg:sticky lg:top-8">
+              <MockFormHeader title="Nuevo Producto" icon={Plus} />
             </div>
-          ) : inactiveProducts && inactiveProducts.length > 0 ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-2 px-2">
-                <div className="flex items-center gap-3">
-                  <Archive className="text-orange-500" size={20} />
-                  <h3 className="text-xs font-black text-white uppercase tracking-widest">
-                    Productos Archivados
+            <div className="lg:col-span-8">
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 px-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Package className="text-blue-500 flex-shrink-0" size={18} />
+                    <h3 className="text-[10px] sm:text-xs font-black text-white uppercase tracking-wider sm:tracking-widest">
+                      Inventario de Productos
+                    </h3>
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase italic">
+                    {mockProducts.length} productos activos
+                  </span>
+                </div>
+                <ProductsTable products={mockProducts as any} onEdit={handleReadOnlyAction} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'categories' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            <div className="lg:col-span-5 lg:sticky lg:top-8">
+              <MockFormHeader title="Nueva Categoría" icon={Tag} />
+            </div>
+            <div className="lg:col-span-7">
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 px-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Tag className="text-purple-500 flex-shrink-0" size={18} />
+                    <h3 className="text-[10px] sm:text-xs font-black text-white uppercase tracking-wider sm:tracking-widest">
+                      Gestión de Categorías
+                    </h3>
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase italic">
+                    {mockCategories.length} categorías
+                  </span>
+                </div>
+                <CategoriesTable categories={mockCategories as any} onEdit={handleReadOnlyAction} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'sizes' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            <div className="lg:col-span-5 lg:sticky lg:top-8">
+              <MockFormHeader title="Nuevo Talle" icon={Ruler} />
+            </div>
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 px-2">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Ruler className="text-cyan-500 flex-shrink-0" size={18} />
+                  <h3 className="text-[10px] sm:text-xs font-black text-white uppercase tracking-wider sm:tracking-widest">
+                    Gestión de Talles
                   </h3>
                 </div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase italic">
-                  {inactiveProducts.length} items desactivados
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase italic">
+                  {activeSizes.length} activos / {inactiveSizes.length} inactivos
                 </span>
               </div>
-              <ProductsTable products={inactiveProducts} onEdit={handleEdit} showInactive={true} />
+              
+              {/* Talles Activos */}
+              <SizesTable sizes={activeSizes as any} onEdit={handleReadOnlyAction} showInactive={false} />
+              
+              {/* Talles Inactivos */}
+              {inactiveSizes.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  <h4 className="text-xs font-black text-orange-400 uppercase tracking-widest px-2">
+                    Talles Inactivos
+                  </h4>
+                  <SizesTable sizes={inactiveSizes as any} onEdit={handleReadOnlyAction} showInactive={true} />
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="bg-slate-900/50 border border-dashed border-slate-800 p-20 rounded-[3rem] text-center">
-              <Archive className="mx-auto text-slate-700 mb-4" size={48} />
-              <h3 className="text-lg font-black text-slate-600 uppercase tracking-widest mb-2">
-                Sin Productos Inactivos
-              </h3>
-              <p className="text-sm text-slate-500">No hay productos desactivados en este momento.</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex items-center gap-3 mb-6 px-2">
-            <TrendingUp className="text-emerald-500" size={20} />
-            <h3 className="text-xs font-black text-white uppercase tracking-widest">Monitor de Transacciones</h3>
           </div>
-          <OrdersTable orders={orders || []} onUpdateStatus={handleUpdateStatus} />
+        )}
+
+        {activeTab === 'colors' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            <div className="lg:col-span-5 lg:sticky lg:top-8">
+              <MockFormHeader title="Nuevo Color" icon={Palette} />
+            </div>
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 px-2">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Palette className="text-pink-500 flex-shrink-0" size={18} />
+                  <h3 className="text-[10px] sm:text-xs font-black text-white uppercase tracking-wider sm:tracking-widest">
+                    Gestión de Colores
+                  </h3>
+                </div>
+                <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase italic">
+                  {activeColors.length} activos / {inactiveColors.length} inactivos
+                </span>
+              </div>
+              
+              {/* Colores Activos */}
+              <ColorsTable colors={activeColors as any} onEdit={handleReadOnlyAction} showInactive={false} />
+              
+              {/* Colores Inactivos */}
+              {inactiveColors.length > 0 && (
+                <div className="mt-6 space-y-3">
+                  <h4 className="text-xs font-black text-orange-400 uppercase tracking-widest px-2">
+                    Colores Inactivos
+                  </h4>
+                  <ColorsTable colors={inactiveColors as any} onEdit={handleReadOnlyAction} showInactive={true} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'orders' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 px-2">
+              <ClipboardList className="text-emerald-500 flex-shrink-0" size={18} />
+              <h3 className="text-[10px] sm:text-xs font-black text-white uppercase tracking-wider sm:tracking-widest">
+                Monitor de Transacciones
+              </h3>
+            </div>
+            <OrdersTable orders={mockOrders} onUpdateStatus={handleReadOnlyAction} />
+          </div>
+        )}
+
+        {activeTab === 'inactive' && (
+          <div className="space-y-4 sm:space-y-6">
+            {/* Info Banner */}
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                <div className="p-2.5 sm:p-3 bg-orange-500/20 rounded-xl flex-shrink-0">
+                  <Archive className="text-orange-400" size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+                    Productos Desactivados
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                    Estos productos fueron eliminados pero se mantienen en el sistema porque tienen órdenes asociadas. 
+                    Puedes reactivarlos en cualquier momento.
+                  </p>
+                  <div className="flex flex-wrap gap-3 sm:gap-4 mt-3 sm:mt-4 text-[10px] sm:text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-orange-500 flex-shrink-0"></div>
+                      <span className="text-slate-400 font-bold whitespace-nowrap">
+                        {mockInactiveProducts.length} productos inactivos
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-indigo-500 flex-shrink-0"></div>
+                      <span className="text-slate-400 font-bold whitespace-nowrap">
+                        {mockProducts.length} productos activos
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla de Productos Inactivos */}
+            {mockInactiveProducts.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 px-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Archive className="text-orange-500 flex-shrink-0" size={18} />
+                    <h3 className="text-[10px] sm:text-xs font-black text-white uppercase tracking-wider sm:tracking-widest">
+                      Productos Archivados
+                    </h3>
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase italic">
+                    {mockInactiveProducts.length} items desactivados
+                  </span>
+                </div>
+                <ProductsTable 
+                  products={mockInactiveProducts as any} 
+                  onEdit={handleReadOnlyAction}
+                  showInactive={true}
+                />
+              </div>
+            ) : (
+              <div className="bg-slate-900/50 border border-dashed border-slate-800 p-12 sm:p-20 rounded-2xl sm:rounded-[3rem] text-center">
+                <Archive className="mx-auto text-slate-700 mb-4" size={40} />
+                <h3 className="text-base sm:text-lg font-black text-slate-600 uppercase tracking-widest mb-2">
+                  Sin Productos Inactivos
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500">
+                  No hay productos desactivados en este momento.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Banner de Modo Demo - Siempre visible en la parte inferior */}
+      <div className="mt-8 bg-yellow-500/5 border border-yellow-500/20 rounded-2xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
+            <span className="text-yellow-500 font-black text-sm">🎭</span>
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-black text-yellow-400 uppercase mb-1">Modo Demostración Activo</h4>
+            <p className="text-xs text-slate-400">
+              Estás visualizando datos de ejemplo. Todas las funciones de edición están deshabilitadas. 
+              Para trabajar con datos reales, desactiva el modo demo desde el botón superior.
+            </p>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

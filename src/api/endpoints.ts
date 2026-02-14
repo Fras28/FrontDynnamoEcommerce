@@ -10,7 +10,16 @@ import {
   RegisterFormData,
   Category,
   CreateCategoryDto,
-  UpdateCategoryDto
+  UpdateCategoryDto,
+  Size,
+  CreateSizeDto,
+  UpdateSizeDto,
+  Color,
+  CreateColorDto,
+  UpdateColorDto,
+  CreateVariantDto,
+  UpdateVariantDto,
+  ProductVariant,
 } from '@/types';
 
 // ==================== AUTH ====================
@@ -36,58 +45,192 @@ export const authApi = {
   },
 };
 
-// ============= PRODUCTS API =============
+// ===================================================================
+// ✨ SIZES API (NUEVO)
+// ===================================================================
+export const sizesApi = {
+  // Obtener talles activos (público)
+  getAll: async (): Promise<Size[]> => {
+    const { data } = await api.get('/sizes');
+    return data;
+  },
+
+  // Obtener todos los talles incluidos inactivos (admin)
+  getAllIncludingInactive: async (): Promise<Size[]> => {
+    const { data } = await api.get('/sizes/admin/all');
+    return data;
+  },
+
+  // Obtener un talle por ID
+  getById: async (id: number): Promise<Size> => {
+    const { data } = await api.get(`/sizes/${id}`);
+    return data;
+  },
+
+  // Crear talle (admin)
+  create: async (sizeData: CreateSizeDto): Promise<Size> => {
+    const { data } = await api.post('/sizes', sizeData);
+    return data;
+  },
+
+  // Actualizar talle (admin)
+  update: async (id: number, sizeData: UpdateSizeDto): Promise<Size> => {
+    const { data } = await api.patch(`/sizes/${id}`, sizeData);
+    return data;
+  },
+
+  // Eliminar talle (admin) - soft/hard delete
+  delete: async (id: number): Promise<any> => {
+    const { data } = await api.delete(`/sizes/${id}`);
+    return data;
+  },
+
+  // Reactivar talle (admin)
+  restore: async (id: number): Promise<Size> => {
+    const { data } = await api.patch(`/sizes/${id}/restore`);
+    return data;
+  },
+};
+
+// ===================================================================
+// ✨ COLORS API (NUEVO)
+// ===================================================================
+export const colorsApi = {
+  // Obtener colores activos (público)
+  getAll: async (): Promise<Color[]> => {
+    const { data } = await api.get('/colors');
+    return data;
+  },
+
+  // Obtener todos los colores incluidos inactivos (admin)
+  getAllIncludingInactive: async (): Promise<Color[]> => {
+    const { data } = await api.get('/colors/admin/all');
+    return data;
+  },
+
+  // Obtener un color por ID
+  getById: async (id: number): Promise<Color> => {
+    const { data } = await api.get(`/colors/${id}`);
+    return data;
+  },
+
+  // Crear color (admin)
+  create: async (colorData: CreateColorDto): Promise<Color> => {
+    const { data } = await api.post('/colors', colorData);
+    return data;
+  },
+
+  // Actualizar color (admin)
+  update: async (id: number, colorData: UpdateColorDto): Promise<Color> => {
+    const { data } = await api.patch(`/colors/${id}`, colorData);
+    return data;
+  },
+
+  // Eliminar color (admin) - soft/hard delete
+  delete: async (id: number): Promise<any> => {
+    const { data } = await api.delete(`/colors/${id}`);
+    return data;
+  },
+
+  // Reactivar color (admin)
+  restore: async (id: number): Promise<Color> => {
+    const { data } = await api.patch(`/colors/${id}/restore`);
+    return data;
+  },
+};
+
+// ============= PRODUCTS API (ACTUALIZADO) =============
 export const productsApi = {
-  // ✅ Obtener productos activos (público)
+  // Obtener productos activos (público)
   getAll: async (): Promise<Product[]> => {
     const { data } = await api.get('/products');
     return data;
   },
 
-  // ✅ Obtener un producto por ID
+  // Obtener un producto por ID
   getById: async (id: number): Promise<Product> => {
     const { data } = await api.get(`/products/${id}`);
     return data;
   },
 
-  // ✅ NUEVO: Obtener TODOS los productos incluidos inactivos (admin)
+  // Obtener TODOS los productos incluidos inactivos (admin)
   getAllIncludingInactive: async (): Promise<Product[]> => {
     const { data } = await api.get('/products/admin/all');
     return data;
   },
 
-  // ✅ NUEVO: Obtener solo productos inactivos (admin)
+  // Obtener solo productos inactivos (admin)
   getInactive: async (): Promise<Product[]> => {
     const { data } = await api.get('/products/admin/inactive');
     return data;
   },
 
-  // ✅ Crear producto
+  // Crear producto (con soporte de variantes)
   create: async (productData: CreateProductDto): Promise<Product> => {
     const { data } = await api.post('/products', productData);
     return data;
   },
 
-  // ✅ Actualizar producto
+  // Actualizar producto
   update: async (id: number, productData: UpdateProductDto): Promise<Product> => {
     const { data } = await api.patch(`/products/${id}`, productData);
     return data;
   },
 
-  // ✅ Eliminar producto (soft/hard delete)
+  // Eliminar producto (soft/hard delete)
   delete: async (id: number): Promise<any> => {
     const { data } = await api.delete(`/products/${id}`);
     return data;
   },
 
-  // ✅ NUEVO: Reactivar producto inactivo
+  // Reactivar producto inactivo
   restore: async (id: number): Promise<Product> => {
     const { data } = await api.patch(`/products/${id}/restore`);
     return data;
   },
+
+  // ===================================================================
+  // ✨ VARIANTES (NUEVO)
+  // ===================================================================
+
+  // Obtener variantes de un producto
+  getVariants: async (productId: number): Promise<ProductVariant[]> => {
+    const { data } = await api.get(`/products/${productId}/variants`);
+    return data;
+  },
+
+  // Agregar variante a un producto (admin)
+  addVariant: async (productId: number, variantData: CreateVariantDto): Promise<ProductVariant> => {
+    const { data } = await api.post(`/products/${productId}/variants`, variantData);
+    return data;
+  },
+
+  // Actualizar una variante (admin)
+  updateVariant: async (variantId: number, variantData: UpdateVariantDto): Promise<ProductVariant> => {
+    const { data } = await api.patch(`/products/variants/${variantId}`, variantData);
+    return data;
+  },
+
+  // Eliminar variante (admin)
+  deleteVariant: async (variantId: number): Promise<any> => {
+    const { data } = await api.delete(`/products/variants/${variantId}`);
+    return data;
+  },
+
+  // Aumentar stock de variante (admin)
+  increaseVariantStock: async (variantId: number, quantity: number): Promise<ProductVariant> => {
+    const { data } = await api.patch(`/products/variants/${variantId}/increase-stock`, { quantity });
+    return data;
+  },
+
+  // Reducir stock de variante (admin)
+  decreaseVariantStock: async (variantId: number, quantity: number): Promise<ProductVariant> => {
+    const { data } = await api.patch(`/products/variants/${variantId}/decrease-stock`, { quantity });
+    return data;
+  },
 };
 
-// ==================== ORDERS ====================
+// ==================== ORDERS (ACTUALIZADO) ====================
 export const ordersApi = {
   checkout: async (data: CreateOrderDto) => {
     // Retorna la orden creada con su ID
@@ -96,11 +239,11 @@ export const ordersApi = {
   },
 
   getMyOrders: async () => {
-    const response = await api.get<Order[]>('/orders/my-orders');
+    const response = await api.get<Order[]>('/orders/me');
     return response.data;
   },
 
-  // ✅ NUEVO: Obtener una orden específica por ID
+  // Obtener una orden específica por ID
   getOrderById: async (orderId: number) => {
     const response = await api.get<Order>(`/orders/${orderId}`);
     return response.data;
@@ -152,6 +295,7 @@ export const categoriesApi = {
     await api.delete(`/categories/${id}`);
   },  
 };
+
 // ==================== FAVORITES ====================
 export const favoritesApi = {
   toggle: async (productId: number) => {
