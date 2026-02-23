@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import bgFungi from "../../assets/bg-fungi.webp";
 import Logo from "../../assets/alquemystic.jpg"
 import Navbar from '../comon/Navbar';
+import { SEO } from '../SEO';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -131,7 +132,11 @@ const LandingPage = () => {
       style={{ 
         backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.85), rgba(2, 6, 23, 0.85)), url(${bgFungi})`
       }}
-    >
+    ><SEO 
+    title="Hongos Adaptógenos Medicinales de Alta Calidad"
+    description="Descubre el poder de los hongos adaptógenos. Reishi, Ashwagandha, Cordyceps, Melena de León. Envíos a todo Argentina. Bienestar natural respaldado por ciencia."
+    url="https://alquimystic.com.ar/"
+  />
   
   <Navbar isLanding={true} />
 

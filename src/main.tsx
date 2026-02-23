@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { HelmetProvider } from 'react-helmet-async';
 import { MantineProvider } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
 import { Notifications } from '@mantine/notifications';
@@ -22,13 +23,15 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <MantineProvider>
-        <ModalsProvider>
-          <Notifications position="top-right" />
-          <App />
-        </ModalsProvider>
-      </MantineProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <MantineProvider>
+          <ModalsProvider>
+            <Notifications position="top-right" />
+            <App />
+          </ModalsProvider>
+        </MantineProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   </React.StrictMode>
 );

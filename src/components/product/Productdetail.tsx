@@ -27,6 +27,7 @@ import { extractProductId } from '../../utils/urlUtils';
 import { useAuthStore } from '../../store/authStore';
 import AuthRequiredModal from '../Auth/AuthRequiredModal';
 import { useSizes, useColors } from '../../hooks/Usesizesandcolors';
+import { SEO } from '../SEO';
 
 const ProductDetail = () => {
   const { slugWithId } = useParams<{ slugWithId: string }>();
@@ -173,7 +174,7 @@ const ProductDetail = () => {
     if (navigator.share) {
       try {
         await navigator.share({ title: product.name, text: product.description || '', url: window.location.href });
-      } catch {}
+      } catch { }
     } else {
       navigator.clipboard.writeText(window.location.href);
       notifications.show({ title: 'Enlace copiado', message: 'El enlace se copió al portapapeles', color: 'blue' });
@@ -188,6 +189,13 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen text-white pb-20 overflow-x-hidden">
       {/* Top nav */}
+      <SEO 
+  title={`${product.name} - Hongo Adaptógeno`}
+  description={`${product.name}: ${product.description?.substring(0, 150)}. Compra hongos medicinales de calidad en Alquimystic.`}
+  url={`https://alquimystic.com.ar/productos/${slugWithId}`}
+  type="product"
+  image={images[0]}
+/>
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex items-center justify-between">
         <button
           onClick={() => navigate(-1)}
@@ -201,9 +209,8 @@ const ProductDetail = () => {
           <button
             onClick={handleToggleFavorite}
             disabled={isToggling}
-            className={`p-2 sm:p-3 rounded-full border-2 transition-all ${
-              isFavorite ? 'bg-red-500 border-red-500 text-white' : 'border-slate-700 text-slate-400 hover:border-red-500 hover:text-red-500'
-            } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`p-2 sm:p-3 rounded-full border-2 transition-all ${isFavorite ? 'bg-red-500 border-red-500 text-white' : 'border-slate-700 text-slate-400 hover:border-red-500 hover:text-red-500'
+              } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Heart size={18} className={isFavorite ? 'fill-current' : ''} />
           </button>
@@ -225,6 +232,11 @@ const ProductDetail = () => {
               src={images[selectedImage]}
               alt={`${product.name} - Imagen ${selectedImage + 1}`}
               className="w-full h-full object-cover"
+              fetchPriority="high"  // ← Prioriza carga
+              loading={selectedImage === 0 ? "eager" : "lazy"}  // ← No lazy load en primera imagen
+              decoding="async"
+              width="600"
+              height="600"
             />
 
             {/* Badges */}
@@ -272,11 +284,10 @@ const ProductDetail = () => {
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
-                  className={`relative min-w-[70px] sm:min-w-[80px] h-[70px] sm:h-[80px] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
-                    selectedImage === idx
+                  className={`relative min-w-[70px] sm:min-w-[80px] h-[70px] sm:h-[80px] rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${selectedImage === idx
                       ? 'border-indigo-500 scale-105'
                       : 'border-slate-800 opacity-50 hover:opacity-100 hover:border-slate-600'
-                  }`}
+                    }`}
                 >
                   <img src={url} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
                   <div className="absolute top-1 right-1 bg-slate-900/70 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
@@ -335,13 +346,12 @@ const ProductDetail = () => {
                           key={size.id}
                           onClick={() => setSelectedSize(size.id)}
                           disabled={!hasStock}
-                          className={`px-4 py-2 rounded-lg font-bold text-sm transition-all border ${
-                            selectedSize === size.id
+                          className={`px-4 py-2 rounded-lg font-bold text-sm transition-all border ${selectedSize === size.id
                               ? 'bg-indigo-600 border-indigo-600 text-white'
                               : hasStock
-                              ? 'bg-slate-800 border-slate-700 text-white hover:border-indigo-500'
-                              : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
-                          }`}
+                                ? 'bg-slate-800 border-slate-700 text-white hover:border-indigo-500'
+                                : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
+                            }`}
                         >
                           {size.name}
                         </button>
@@ -366,13 +376,12 @@ const ProductDetail = () => {
                           key={color.id}
                           onClick={() => setSelectedColor(color.id)}
                           disabled={!hasStock}
-                          className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 border ${
-                            selectedColor === color.id
+                          className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 border ${selectedColor === color.id
                               ? 'bg-indigo-600 border-indigo-600 text-white'
                               : hasStock
-                              ? 'bg-slate-800 border-slate-700 text-white hover:border-indigo-500'
-                              : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
-                          }`}
+                                ? 'bg-slate-800 border-slate-700 text-white hover:border-indigo-500'
+                                : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
+                            }`}
                         >
                           {color.hexCode && (
                             <div
