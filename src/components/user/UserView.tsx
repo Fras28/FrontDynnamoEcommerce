@@ -13,7 +13,14 @@ import UserFavorites from './UserFavorites';
 import { useAuthStore } from '../../store/authStore';
 import AuthRequiredModal from '../Auth/AuthRequiredModal';
 
-
+const STORE_CONFIG = {
+  slug: 'alquimystic', // Cambiar a 'grupo-gregori' o 'look-arround' según el comercio
+  name: 'Alquimystic',
+  description: 'Explora todo sobre los mejores hongos adaptógenos',
+  // Para otros comercios:
+  // 'grupo-gregori': 'Soluciones industriales en cerramientos'
+  // 'look-arround': 'Ropa urbana femenina de tendencia'
+} as const;
 const UserView = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -23,20 +30,26 @@ const UserView = () => {
   const [activeTab, setActiveTab] = useState<'shop' | 'orders' | 'favorites'>('shop');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   
-  const { data: products, isLoading } = useProducts();
-  const { data: categories, isLoading: loadingCategories } = useCategories();
+  const { data: products, isLoading, error: productsError } = useProducts();
+  const { data: categories, isLoading: loadingCategories, error: categoriesError } = useCategories();
   const { addToCart, cart } = useCartStore();
 
   // ✅ Leer filtro de categoría desde URL
   useEffect(() => {
-    const categoryParam = searchParams.get('categoria');
-    if (categoryParam && categories) {
-      const category = categories.find(c => generateSlug(c.name) === categoryParam);
-      if (category) {
-        setSelectedCategory(category.id);
+    if (productsError || categoriesError) {
+      const error = productsError || categoriesError;
+      const status = (error as any)?.response?.status;
+      const message = (error as any)?.response?.data?.message;
+      
+      if (status === 403 && message?.includes('store')) {
+        notifications.show({
+          title: 'Error de configuración',
+          message: 'No se pudo identificar el comercio. Verifica el STORE_SLUG en axios.ts',
+          color: 'red',
+        });
       }
     }
-  }, [searchParams, categories]);
+  }, [productsError, categoriesError]);
 
   // ✅ Resetear activeTab a 'shop' si el usuario hace logout y estaba en favoritos/pedidos
   useEffect(() => {
@@ -138,24 +151,23 @@ const UserView = () => {
     );
   }
 
-  return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      
-      {/* Selector de Pestañas */}
-      <div className="flex p-1 bg-slate-900 border border-slate-800 rounded-2xl w-fit mx-auto md:mx-0 shadow-2xl">
-        <button
-          onClick={() => setActiveTab('shop')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${
-            activeTab === 'shop' 
-            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
-            : 'text-slate-500 hover:text-slate-300'
-          }`}
-        >
-          <Store size={14} /> TIENDA
-        </button>
-        {/* ✅ Solo mostrar Favoritos si el usuario está autenticado */}
-        {user && (
+
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Selector de Pestañas */}
+        <div className="flex p-1 bg-slate-900 border border-slate-800 rounded-2xl w-fit mx-auto md:mx-0 shadow-2xl">
           <button
+            onClick={() => setActiveTab('shop')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${
+              activeTab === 'shop' 
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
+              : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            <Store size={14} /> TIENDA
+          </button>
+          {user && (
+            <button
               onClick={() => setActiveTab('favorites')}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-[10px] transition-all ${
                 activeTab === 'favorites' ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/20' : 'text-slate-400 hover:text-slate-200'
@@ -163,77 +175,76 @@ const UserView = () => {
             >
               <Heart size={14} /> FAVORITOS
             </button>
-        )}
-
-        {/* ✅ Solo mostrar Mis Pedidos si el usuario está autenticado */}
-        {user && (
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${
-              activeTab === 'orders' 
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
-              : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            <ShoppingBag size={14} /> MIS PEDIDOS
-          </button>
-        )}
-      </div>
-
-      {activeTab === 'shop' ? (
-        <>
-          {/* Header de la Tienda con Filtros */}
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">
-                NUESTRO <span className="text-indigo-400">CATÁLOGO</span>
-              </h2>
-              <p className="text-slate-500 text-sm mt-1">
-                Explora todo sobre los mejores hongos adaptogenos
-              </p>
-            </div>
-
-            {/* Filtros de Categoría */}
-            <div className="flex flex-col gap-2 min-w-[250px]">
-              <div className="flex items-center gap-2 text-slate-400 text-xs font-black uppercase tracking-wider">
-                <Filter size={14} />
-                Filtrar por categoría
+          )}
+          {user && (
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${
+                activeTab === 'orders' 
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
+                : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              <ShoppingBag size={14} /> MIS PEDIDOS
+            </button>
+          )}
+        </div>
+  
+        {activeTab === 'shop' ? (
+          <>
+            {/* Header de la Tienda con Filtros */}
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase">
+                  NUESTRO <span className="text-indigo-400">CATÁLOGO</span>
+                </h2>
+                {/* ✅ Descripción dinámica según el comercio configurado */}
+                <p className="text-slate-500 text-sm mt-1">
+                  {STORE_CONFIG.description}
+                </p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => handleCategoryChange(null)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${
-                    selectedCategory === null
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
-                      : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-600'
-                  }`}
-                >
-                  TODOS
-                </button>
-                {loadingCategories ? (
-                  <div className="flex items-center gap-2 text-slate-500 text-xs px-4 py-2">
-                    <Loader2 size={12} className="animate-spin" />
-                    Cargando...
-                  </div>
-                ) : (
-                  categories?.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryChange(category.id)}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all flex items-center gap-1.5 ${
-                        selectedCategory === category.id
-                          ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20'
-                          : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-600'
-                      }`}
-                    >
-                      <Tag size={10} />
-                      {category.name.toUpperCase()}
-                    </button>
-                  ))
-                )}
+  
+              {/* Filtros de Categoría */}
+              <div className="flex flex-col gap-2 min-w-[250px]">
+                <div className="flex items-center gap-2 text-slate-400 text-xs font-black uppercase tracking-wider">
+                  <Filter size={14} />
+                  Filtrar por categoría
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleCategoryChange(null)}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${
+                      selectedCategory === null
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                        : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    TODOS
+                  </button>
+                  {loadingCategories ? (
+                    <div className="flex items-center gap-2 text-slate-500 text-xs px-4 py-2">
+                      <Loader2 size={12} className="animate-spin" />
+                      Cargando...
+                    </div>
+                  ) : (
+                    categories?.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryChange(category.id)}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all flex items-center gap-1.5 ${
+                          selectedCategory === category.id
+                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20'
+                            : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-600'
+                        }`}
+                      >
+                        <Tag size={10} />
+                        {category.name.toUpperCase()}
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Contador de productos filtrados */}
           {selectedCategory && (
@@ -425,7 +436,7 @@ const UserView = () => {
             </div>
           )}
         </>
-      ) : activeTab === 'favorites' ? (
+      ) :  activeTab === 'favorites' ? (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-white">Tus Favoritos</h2>
@@ -438,7 +449,7 @@ const UserView = () => {
           <UserOrders />
         </div>
       )}
-          <AuthRequiredModal
+      <AuthRequiredModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         action={authAction}
